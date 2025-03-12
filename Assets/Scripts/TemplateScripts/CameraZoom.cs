@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class CameraOrbitQuaternionn : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class CameraOrbitQuaternionn : MonoBehaviour
     private float distanceToTarget;
     private float currentVerticalAngle = 0f;
     private float currentHorizontalAngle = 0f;
+
 
     void Start()
     {
