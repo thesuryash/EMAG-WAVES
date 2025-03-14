@@ -36,7 +36,7 @@ public class DistributedWavePoints : MonoBehaviour
         length = Mathf.Abs(plane1.transform.position.x - plane2.transform.position.x);
 
 
-        stepSize = (int)(length / 5);
+        stepSize = (int)(length / 1);
         // Check for valid input
         if (length <= 0 || stepSize <= 0)
         {
@@ -80,6 +80,7 @@ public class DistributedWavePoints : MonoBehaviour
                         GameObject point = Instantiate(pointPrefab);
                         point.transform.SetParent(transform);
                         point.transform.position = position;
+                        Arrow arr = new Arrow(point);
                         pointCount++;
                         Debug.Log($"Point {pointCount} created at: {position}");
                     }

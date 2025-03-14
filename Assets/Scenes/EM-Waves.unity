@@ -402,6 +402,7 @@ GameObject:
   m_Component:
   - component: {fileID: 73536662}
   - component: {fileID: 73536663}
+  - component: {fileID: 73536664}
   m_Layer: 5
   m_Name: Parent
   m_TagString: Untagged
@@ -444,6 +445,19 @@ MonoBehaviour:
   plane1: {fileID: 1147502559}
   plane2: {fileID: 286219330}
   parent: {fileID: 73536661}
+--- !u!114 &73536664
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 73536661}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aff630c11cf215b4cae4186a888bccb9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  parent: {fileID: 0}
 --- !u!224 &91369217 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 224153425668364128, guid: 5814e191475da55449e996c6052e2ef7, type: 3}

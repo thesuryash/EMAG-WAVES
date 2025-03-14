@@ -80,7 +80,9 @@ public class Flux : MonoBehaviour
     void Start()
     {
         float initialLength = Arrow.CalculateLengthByValue(area);
-        areaArrow = new Arrow(areaArrowAttachedTo, areaArrowHead, areaArrowTail, arrowheadDirection, initialLengthOfTail);
+        //areaArrow = new Arrow(areaArrowAttachedTo, areaArrowHead, areaArrowTail, arrowheadDirection, initialLengthOfTail);
+        areaArrow = new Arrow(areaArrowAttachedTo, arrowheadDirection, initialLengthOfTail);
+
 
         //Setting up the sliders
         frame = GetComponent<GameObject>();
@@ -91,7 +93,9 @@ public class Flux : MonoBehaviour
 
         fieldArrowParent.AddComponent<MeshFilter>();
 
-        fieldArrow = new Arrow(fieldArrowParent, fieldArrowHead, fieldArrowTail, new Vector3(0, 0, 1), arrowLength);
+        //fieldArrow = new Arrow(fieldArrowParent, fieldArrowHead, fieldArrowTail, new Vector3(0, 0, 1), arrowLength);
+        fieldArrow = new Arrow(fieldArrowParent, new Vector3(0, 0, 1), arrowLength);
+
 
 
         //Listeners
@@ -374,7 +378,7 @@ public class Flux : MonoBehaviour
         {
             rotationSlider.value = closestValue;
         }
-    } 
+    }
 
     private void ShowMobileKeyboard(string text)
     {

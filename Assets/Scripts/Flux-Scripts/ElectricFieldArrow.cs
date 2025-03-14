@@ -21,7 +21,8 @@ public class ElectricFieldArrow : MonoBehaviour
         float EFMagnitude = electricFieldSlider.value;
         float arrowLength = 1f;
 
-        fieldArrow = new Arrow(fieldArrowParent, fieldArrowHead, fieldArrowTail, new Vector3(0, 0, 1), arrowLength);
+        //fieldArrow = new Arrow(fieldArrowParent, fieldArrowHead, fieldArrowTail, new Vector3(0, 0, 1), arrowLength);
+        fieldArrow = new Arrow(fieldArrowParent, new Vector3(0, 0, 1), arrowLength);
 
     }
 
