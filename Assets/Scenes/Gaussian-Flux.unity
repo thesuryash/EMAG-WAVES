@@ -9687,10 +9687,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02c2e38329e14be428da227297ea816b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lineRenderer: {fileID: 0}
-  segment: 2
-  dashLength: 0.5
-  gapLength: 1
 --- !u!1 &1417561624
 GameObject:
   m_ObjectHideFlags: 0
