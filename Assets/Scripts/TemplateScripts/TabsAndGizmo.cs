@@ -4,7 +4,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-// THIS WAS USED IN FLUX, LINKED TO CANVAS
+/// <summary>
+/// General-purpose Template Script
+/// Configures interactions between the Settings Button, Control Panel, Credits Panel, and Gizmo.
+/// Added as Component under Canvas
+/// </summary>
 
 
 
@@ -12,8 +16,6 @@ public class Tabs : MonoBehaviour
 {
     // Settings Panel
     [SerializeField] private GameObject simSettingsPanel;
-
-    [SerializeField] private GameObject credits;
 
     [SerializeField] private Button settingButton;
 
@@ -76,7 +78,8 @@ public class Tabs : MonoBehaviour
                 {
                     simSettingsPanel.SetActive(false);
                     isSettingsPanelShown = false;
-                    credits.SetActive(false);
+                    creditsPanel.SetActive(false);
+                    isCreditsShown = false;
                     gizmoButtonOnOff.SetActive(false);
                 }
 
@@ -85,7 +88,6 @@ public class Tabs : MonoBehaviour
             {
                 simSettingsPanel.SetActive(true);
                 isSettingsPanelShown = true;
-                credits.SetActive(true);
                 gizmoButtonOnOff.SetActive(true);
 
             }
@@ -112,7 +114,7 @@ public class Tabs : MonoBehaviour
   
     private void OnCreditsClicked()
     {
-        Debug.Log("Credit button clicked. isPlaying: " + isCreditsShown);
+        Debug.Log(isCreditsShown);
         if (isCreditsShown)
         {
             creditsPanel.SetActive(false);
@@ -129,7 +131,7 @@ public class Tabs : MonoBehaviour
 
     private string RandomNameString()
     {
-        List<string> list = new List<string> { "Tamara", "Davey", "Suryash", "Liyu", "Sabrina", "Ryan <b>Tapping</b> (5)", "Phil Krasicky" };
+        List<string> list = new List<string> { "Tamara", "Davey", "Suryash", "Liyu", "Sabrina", "Grace", "Ryan <b>Tapping</b> (5)", "Phil Krasicky" };
         int listSize = list.Count;
         string nameText = "";
         List<string> ourList = new List<string>();

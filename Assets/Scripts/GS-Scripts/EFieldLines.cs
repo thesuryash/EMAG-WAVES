@@ -27,9 +27,6 @@ public class EFieldLines : MonoBehaviour
 
     public float HEIGHT_ABOVE_SURFACE = 5f;
 
-    [SerializeField] private Button pausePlayButton;
-    public bool isPlayOn = false;
-
 
     //Object pooling - keeping it for later use when we might want to use a slider to adjust the charge magnitude and field lines
     private Queue<LineRenderer> linePool = new Queue<LineRenderer>();
@@ -68,41 +65,12 @@ public class EFieldLines : MonoBehaviour
 
     void Start()
     {
-        pausePlayButton.onClick.AddListener(OnPausePlayClicked);
         pointChargePrevPos = pointCharge.transform.position;
 
         //Setting position of guassian surface = position of the charge
         //sphereGaussianSurface.transform.position = pointCharge.transform.position;
 
 
-    }
-
-    void OnPausePlayClicked()
-    {
-        // Find all LineRenderer objects
-        LineRenderer[] lineRenderers = FindObjectsOfType<LineRenderer>();
-
-        foreach (LineRenderer lineRenderer in lineRenderers)
-        {
-            // Find the child named "head(Clone)"
-            Transform head = lineRenderer.transform.Find("head(Clone)");
-
-            if (head != null)
-            {
-                Vector3 start = new Vector3(0, 0, 0); // Replace with your actual start position
-                Vector3 end = new Vector3(10, 0, 0);  // Replace with your actual end position
-
-                if (!isPlayOn)
-                {
-                    head.position = (start + end) / 2;
-                }
-                else
-                {
-                    float timeFactor = Mathf.PingPong(Time.time, 1); // Adjust the time factor as needed
-                    head.position = Vector3.Lerp(start, end, timeFactor);
-                }
-            }
-        }
     }
 
     void Update()
@@ -290,15 +258,15 @@ public class EFieldLines : MonoBehaviour
             arrow.transform.up = (end - start).normalized;
             arrow.transform.SetParent(newLine.transform);
 
-            if (!isPlayOn)
-            {
-                arrow.transform.position = (start + end) / 2;
-            }
-            else
-            {
-                float timeFactor = Mathf.PingPong(Time.time, 1); // Adjust the time factor as needed
-                arrow.transform.position = Vector3.Lerp(start, end, timeFactor);
-            }
+            //if (!isPlayOn)
+            //{
+            arrow.transform.position = (start + end) / 2;
+            //}
+            //else
+            //{
+            //    float timeFactor = Mathf.PingPong(Time.time, 1); // Adjust the time factor as needed
+            //    arrow.transform.position = Vector3.Lerp(start, end, timeFactor);
+            //}
 
 
         }
