@@ -6146,7 +6146,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   simSettingsPanel: {fileID: 1330974486}
-  credits: {fileID: 144873874}
   settingButton: {fileID: 1106159323}
   gizmoButton: {fileID: 1857881315}
   gizmoButtonText: {fileID: 968072792}
@@ -7942,7 +7941,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 504, y: 49}
-  m_SizeDelta: {x: 800, y: 50}
+  m_SizeDelta: {x: 1000, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1148896585
 MonoBehaviour:
@@ -15112,14 +15111,13 @@ GameObject:
   - component: {fileID: 2131930220}
   - component: {fileID: 2131930222}
   - component: {fileID: 2131930221}
-  - component: {fileID: 2131930223}
   m_Layer: 5
   m_Name: CreditsPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2131930220
 RectTransform:
   m_ObjectHideFlags: 0
@@ -15180,21 +15178,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2131930219}
   m_CullTransparentMesh: 1
---- !u!114 &2131930223
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2131930219}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 012e309cc46812c4b8b02fd524adb973, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  creditsButton: {fileID: 144873876}
-  creditsPanel: {fileID: 2131930219}
-  isShown: 0
 --- !u!1 &1059248375931320
 GameObject:
   m_ObjectHideFlags: 0

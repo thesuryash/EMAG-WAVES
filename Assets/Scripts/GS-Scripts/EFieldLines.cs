@@ -232,12 +232,6 @@ public class EFieldLines : MonoBehaviour
 
         for (int i = 0; i < fLines.Count; i++)
         {
-            //GameObject test = Instantiate(testObject);
-            //test.name = "test " + i;
-            //test.transform.position = fLines[i]["surface"];
-
-            //GameObject lineObject = new GameObject("Cylinder Field " + (i + 1));
-            //LineRenderer newLine = lineObject.AddComponent<LineRenderer>(); // change this line for pooling
 
             LineRenderer newLine = Instantiate(baseEFLine);
 
@@ -258,15 +252,7 @@ public class EFieldLines : MonoBehaviour
             arrow.transform.up = (end - start).normalized;
             arrow.transform.SetParent(newLine.transform);
 
-            //if (!isPlayOn)
-            //{
             arrow.transform.position = (start + end) / 2;
-            //}
-            //else
-            //{
-            //    float timeFactor = Mathf.PingPong(Time.time, 1); // Adjust the time factor as needed
-            //    arrow.transform.position = Vector3.Lerp(start, end, timeFactor);
-            //}
 
 
         }
@@ -301,14 +287,8 @@ public class EFieldLines : MonoBehaviour
                 float x = Mathf.Cos(theta) * radius;
                 float z = Mathf.Sin(theta) * radius;
 
-                UnityEngine.Vector3 pt_start = new UnityEngine.Vector3(x, 0, z) * radius + center_offset;
-                //Debug.Log("pt on srf: " + pt_start);
-
-                // Closest point on the central axis of the cylinder
-                //UnityEngine.Vector3 point_on_axis = new UnityEngine.Vector3(0, y, 0) + cylinderCenter;
-                UnityEngine.Vector3 pt_end = new UnityEngine.Vector3(x, 0, z) * radius * 5 + center_offset;
-                //Debug.Log("pt out srf: " + pt_end);
-
+                UnityEngine.Vector3 pt_start = new UnityEngine.Vector3(x, 0, z) + center_offset;
+                UnityEngine.Vector3 pt_end = new UnityEngine.Vector3(x, 0, z) * 5 + center_offset;
 
                 Vector3 offset_start = pt_start - cylinderCenter;
                 Vector3 offset_end = pt_end - cylinderCenter;

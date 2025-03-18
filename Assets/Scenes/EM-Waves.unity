@@ -972,11 +972,11 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 28497760}
-  m_Father: {fileID: 823972371}
+  m_Father: {fileID: 1330974487}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -67, y: -570.9}
+  m_AnchoredPosition: {x: -66.99988, y: -570.9}
   m_SizeDelta: {x: 95, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &144873876
@@ -4181,6 +4181,7 @@ GameObject:
   - component: {fileID: 823972368}
   - component: {fileID: 823972373}
   - component: {fileID: 823972372}
+  - component: {fileID: 823972374}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -4269,7 +4270,6 @@ RectTransform:
   - {fileID: 666304403}
   - {fileID: 1330974487}
   - {fileID: 2131930220}
-  - {fileID: 144873875}
   - {fileID: 899101102}
   - {fileID: 1147502560}
   - {fileID: 286219331}
@@ -4323,6 +4323,31 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 823972367}
   m_CullTransparentMesh: 1
+--- !u!114 &823972374
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 823972367}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 851de72bb2703164f81e4e2a853e17d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  simSettingsPanel: {fileID: 1330974486}
+  settingButton: {fileID: 1106159323}
+  gizmoButton: {fileID: 1857881315}
+  gizmoButtonText: {fileID: 968072792}
+  gizmo: {fileID: 1483807305}
+  gizmoButtonOnOff: {fileID: 1857881313}
+  creditsButton: {fileID: 144873876}
+  creditsPanel: {fileID: 2131930219}
+  isCreditsShown: 0
+  nameLabel: {fileID: 1549790443}
+  nameEasterEgg: {fileID: 1148896585}
+  mobileScale: 10
+  pcScale: 1
 --- !u!1 &845993175
 GameObject:
   m_ObjectHideFlags: 0
@@ -5374,7 +5399,7 @@ GameObject:
   - component: {fileID: 1106159324}
   - component: {fileID: 1106159323}
   m_Layer: 5
-  m_Name: EFieldTabButton
+  m_Name: SettingsButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6501,6 +6526,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1904085533}
+  - {fileID: 144873875}
   m_Father: {fileID: 823972371}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -7250,6 +7276,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1478904495}
   m_CullTransparentMesh: 1
+--- !u!1 &1483807305 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1378467028300716, guid: 5814e191475da55449e996c6052e2ef7, type: 3}
+  m_PrefabInstance: {fileID: 221063462}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1549790441
 GameObject:
   m_ObjectHideFlags: 0
@@ -9670,7 +9701,6 @@ GameObject:
   - component: {fileID: 2131930220}
   - component: {fileID: 2131930222}
   - component: {fileID: 2131930221}
-  - component: {fileID: 2131930223}
   m_Layer: 5
   m_Name: CreditsPanel
   m_TagString: Untagged
@@ -9738,21 +9768,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2131930219}
   m_CullTransparentMesh: 1
---- !u!114 &2131930223
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2131930219}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 012e309cc46812c4b8b02fd524adb973, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  creditsButton: {fileID: 144873876}
-  creditsPanel: {fileID: 2131930219}
-  isShown: 0
 --- !u!1 &1059248375931320
 GameObject:
   m_ObjectHideFlags: 0
