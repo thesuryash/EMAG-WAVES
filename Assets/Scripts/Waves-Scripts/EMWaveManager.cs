@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI; // Required for UI elements
 
 public class EMWaveManager : MonoBehaviour
 {
@@ -8,51 +9,66 @@ public class EMWaveManager : MonoBehaviour
     public float amplitude = 1.0f;      // Maximum field strength
     public float wavelength = 5.0f;     // Distance between wave peaks
     public float frequency = 1.0f;      // Wave oscillation speed
-    public int pointCount = 20;         // Number of field vectors to display
-    public float waveLength = 10.0f;    // Total length of wave visualization
+    public int pointCount = 100;         // Number of field vectors to display
+    public float waveLength = 100.0f;    // Total length of wave visualization
+
+    [Header("UI Controls")]
+    public Slider amplitudeSlider;      // Reference to amplitude slider
+    public Slider wavelengthSlider;     // Reference to wavelength slider  
+    public Slider frequencySlider;      // Reference to frequency slider
+
+    [Header("UI Value Ranges")]
+    public float minAmplitude = 0.1f;   // Minimum amplitude value
+    public float maxAmplitude = 3.0f;   // Maximum amplitude value
+    public float minWavelength = 1.0f;  // Minimum wavelength value
+    public float maxWavelength = 10.0f; // Maximum wavelength value
+    public float minFrequency = 0.1f;   // Minimum frequency value
+    public float maxFrequency = 3.0f;   // Maximum frequency value
 
     [Header("Visualization")]
-    public Material electricFieldMaterial;  // Material for E-field (typically red)
-    public Material magneticFieldMaterial;  // Material for B-field (typically blue) 
-    public Material propagationMaterial;    // Material for propagation arrow (typically green)
+    public Material electricFieldMaterial;  // Material for E-field
+    public Material magneticFieldMaterial;  // Material for B-field 
+    public Material propagationMaterial;    // Material for propagation arrow 
     public float arrowRelativeSize = 0.5f;
     public bool showPropagationArrow = true;
 
     [Header("Debug Options")]
-    public bool debugMode = true;       // Enable/disable debug logging
+    public bool debugMode = true;       
 
-    // Parent GameObjects for organization
+   
     private GameObject waveContainer;
     private GameObject propagationArrowObj;
 
-    // Lists to store our field components
+   
     private List<GameObject> fieldPoints = new List<GameObject>();
     private List<Arrow> electricFieldArrows = new List<Arrow>();
     private List<Arrow> magneticFieldArrows = new List<Arrow>();
     private Arrow propagationArrow;
 
-    // Wave animation variables
+
     private float phase = 0.0f;
 
     void Start()
     {
         try
         {
-            // Create a container for better organization in the hierarchy
+           //container creation
             waveContainer = new GameObject("EM Wave Points");
             waveContainer.transform.parent = this.transform;
             waveContainer.transform.localPosition = Vector3.zero;
 
-            // Make sure we have our materials
+            
             CheckMaterials();
 
-            // Create the propagation direction arrow (optional)
+            
+            SetupUIControls();
+
+     
             if (showPropagationArrow)
             {
                 CreatePropagationArrow();
             }
 
-            // Set up the field vectors
             CreateFieldPoints();
 
             if (debugMode)
@@ -61,6 +77,64 @@ public class EMWaveManager : MonoBehaviour
         catch (System.Exception e)
         {
             Debug.LogError("Error in EMWaveManager Start(): " + e.Message);
+        }
+    }
+
+    void SetupUIControls()
+    {
+        // amplitude slider
+        if (amplitudeSlider != null)
+        {
+           
+            amplitudeSlider.minValue = minAmplitude;
+            amplitudeSlider.maxValue = maxAmplitude;
+            amplitudeSlider.value = amplitude;
+
+            amplitudeSlider.onValueChanged.AddListener(SetAmplitude);
+
+            if (debugMode)
+                Debug.Log("Amplitude slider configured");
+        }
+        else if (debugMode)
+        {
+            Debug.LogWarning("Amplitude slider reference is missing");
+        }
+
+        // wavelength slider
+        if (wavelengthSlider != null)
+        {
+           
+            wavelengthSlider.minValue = minWavelength;
+            wavelengthSlider.maxValue = maxWavelength;
+            wavelengthSlider.value = wavelength;
+
+            wavelengthSlider.onValueChanged.AddListener(SetWavelength);
+
+            if (debugMode)
+                Debug.Log("Wavelength slider configured");
+        }
+        else if (debugMode)
+        {
+            Debug.LogWarning("Wavelength slider reference is missing");
+        }
+
+        // freq slider
+        if (frequencySlider != null)
+        {
+      
+            frequencySlider.minValue = minFrequency;
+            frequencySlider.maxValue = maxFrequency;
+            frequencySlider.value = frequency;
+
+          
+            frequencySlider.onValueChanged.AddListener(SetFrequency);
+
+            if (debugMode)
+                Debug.Log("Frequency slider configured");
+        }
+        else if (debugMode)
+        {
+            Debug.LogWarning("Frequency slider reference is missing");
         }
     }
 
@@ -123,10 +197,10 @@ public class EMWaveManager : MonoBehaviour
     {
         try
         {
-            // Update phase based on time and frequency
+         
             phase += Time.deltaTime * frequency * 2 * Mathf.PI;
 
-            // Update all field vectors
+          
             UpdateFieldVectors();
         }
         catch (System.Exception e)
@@ -139,7 +213,7 @@ public class EMWaveManager : MonoBehaviour
     {
         try
         {
-            // Clear any existing points if recreating
+           
             foreach (var point in fieldPoints)
             {
                 Destroy(point);
@@ -154,7 +228,7 @@ public class EMWaveManager : MonoBehaviour
             if (debugMode)
                 Debug.Log($"Creating {pointCount} field points with spacing {spacing}");
 
-            // Create field points along the z-axis (propagation direction)
+            // create field points along the z-axis (propagation direction)
             for (int i = 0; i < pointCount; i++)
             {
                 // Create a point GameObject to hold our arrows
@@ -178,7 +252,7 @@ public class EMWaveManager : MonoBehaviour
                 Arrow electricArrow = new Arrow(
                     parent: eFieldObj,
                     initialDirection: Vector3.up,  // E-field points vertically (y-axis)
-                    lengthOfTail: 0,  // Initial length, will be updated in UpdateFieldVectors
+                    lengthOfTail: 0,  // initial length, will be updated in UpdateFieldVectors
                     relativeSize: arrowRelativeSize,
                     headMaterial: electricFieldMaterial,
                     tailMaterial: electricFieldMaterial
@@ -191,13 +265,13 @@ public class EMWaveManager : MonoBehaviour
                 Arrow magneticArrow = new Arrow(
                     parent: bFieldObj,
                     initialDirection: Vector3.right,  // B-field points horizontally (x-axis)
-                    lengthOfTail: 0,  // Initial length, will be updated in UpdateFieldVectors
+                    lengthOfTail: 0,  // initial tail length
                     relativeSize: arrowRelativeSize,
                     headMaterial: magneticFieldMaterial,
                     tailMaterial: magneticFieldMaterial
                 );
 
-                // Add objects to our lists
+              
                 fieldPoints.Add(point);
                 electricFieldArrows.Add(electricArrow);
                 magneticFieldArrows.Add(magneticArrow);
@@ -222,27 +296,27 @@ public class EMWaveManager : MonoBehaviour
             // Update all field points
             for (int i = 0; i < fieldPoints.Count; i++)
             {
-                // Get the position along the propagation axis (z-axis)
+                // get the position along the propagation axis (z-axis)
                 float z = fieldPoints[i].transform.localPosition.z;
 
-                // Calculate the phase at this position
+                // calculate the phase at this position
                 float pointPhase = phase - (z / wavelength) * 2 * Mathf.PI;
 
-                // Calculate electric field amplitude (oscillates along y-axis)
+                // calculate electric field amplitude (oscillates along y-axis)
                 float eFieldStrength = amplitude * Mathf.Sin(pointPhase);
 
-                // Calculate magnetic field amplitude (oscillates along x-axis)
+                // calculate magnetic field amplitude (oscillates along x-axis)
                 float bFieldStrength = amplitude * Mathf.Sin(pointPhase);
 
-                // Get the child objects that hold our arrows
+                // retrives child objects that hold our arrows
                 Transform eFieldTransform = fieldPoints[i].transform.GetChild(0);
                 Transform bFieldTransform = fieldPoints[i].transform.GetChild(1);
 
-                // Update electric field arrow (y-axis)
+                // update electric field arrow (y-axis)
                 eFieldTransform.rotation = Quaternion.identity;  // Reset rotation
                 electricFieldArrows[i].SetTailLength(Mathf.Abs(eFieldStrength));
 
-                // Set correct direction based on field sign
+                // set correct direction based on field sign
                 if (eFieldStrength < 0)
                 {
                     eFieldTransform.rotation = Quaternion.Euler(0, 0, 180);  // Point down
@@ -253,10 +327,10 @@ public class EMWaveManager : MonoBehaviour
                 bFieldTransform.rotation = Quaternion.Euler(0, 0, 90);  // Start pointing right
                 magneticFieldArrows[i].SetTailLength(Mathf.Abs(bFieldStrength));
 
-                // Set correct direction based on field sign
+                // correct direction based on field sign
                 if (bFieldStrength < 0)
                 {
-                    bFieldTransform.rotation = Quaternion.Euler(0, 0, 270);  // Point left instead
+                    bFieldTransform.rotation = Quaternion.Euler(0, 0, 270);  // point left instead
                 }
                 magneticFieldArrows[i].Update();
             }
@@ -267,32 +341,84 @@ public class EMWaveManager : MonoBehaviour
         }
     }
 
-    // Helper methods for runtime control
+    // Methods for UI control
 
     public void SetFrequency(float newFrequency)
     {
         frequency = newFrequency;
+
+        // Update the slider value if it exists and doesn't match
+        if (frequencySlider != null && Mathf.Abs(frequencySlider.value - newFrequency) > 0.01f)
+        {
+            frequencySlider.value = newFrequency;
+        }
+
+        if (debugMode)
+            Debug.Log($"Frequency set to {newFrequency}");
     }
 
     public void SetAmplitude(float newAmplitude)
     {
         amplitude = newAmplitude;
+
+        // same thing
+        if (amplitudeSlider != null && Mathf.Abs(amplitudeSlider.value - newAmplitude) > 0.01f)
+        {
+            amplitudeSlider.value = newAmplitude;
+        }
+
+        if (debugMode)
+            Debug.Log($"Amplitude set to {newAmplitude}");
     }
 
     public void SetWavelength(float newWavelength)
     {
         wavelength = newWavelength;
+
+        // same thing
+        if (wavelengthSlider != null && Mathf.Abs(wavelengthSlider.value - newWavelength) > 0.01f)
+        {
+            wavelengthSlider.value = newWavelength;
+        }
+
+        if (debugMode)
+            Debug.Log($"Wavelength set to {newWavelength}");
     }
 
     public void ResetWave()
     {
         phase = 0.0f;
+
+        // Reset all sliders to default values
+        if (amplitudeSlider != null)
+            amplitudeSlider.value = 1.0f;
+
+        if (wavelengthSlider != null)
+            wavelengthSlider.value = 5.0f;
+
+        if (frequencySlider != null)
+            frequencySlider.value = 1.0f;
+
+
         CreateFieldPoints();
+
+        if (debugMode)
+            Debug.Log("Wave reset to default values");
     }
 
     void OnDestroy()
     {
-        // Clean up
+        // remove listeners to prevent memory leaks
+        if (amplitudeSlider != null)
+            amplitudeSlider.onValueChanged.RemoveListener(SetAmplitude);
+
+        if (wavelengthSlider != null)
+            wavelengthSlider.onValueChanged.RemoveListener(SetWavelength);
+
+        if (frequencySlider != null)
+            frequencySlider.onValueChanged.RemoveListener(SetFrequency);
+
+        // clean up
         if (waveContainer != null)
             Destroy(waveContainer);
 
@@ -300,5 +426,3 @@ public class EMWaveManager : MonoBehaviour
             Destroy(propagationArrowObj);
     }
 }
-
-

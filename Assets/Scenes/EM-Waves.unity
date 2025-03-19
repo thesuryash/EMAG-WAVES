@@ -8124,7 +8124,7 @@ GameObject:
   - component: {fileID: 1637726635}
   - component: {fileID: 1637726636}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: EMWAVES SIM
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8140,8 +8140,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 20, y: 20, z: 20}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 70.98, y: 70.98, z: 70.98}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -8162,11 +8162,21 @@ MonoBehaviour:
   frequency: 1
   pointCount: 20
   waveLength: 10
+  amplitudeSlider: {fileID: 585565893}
+  wavelengthSlider: {fileID: 1632995608}
+  frequencySlider: {fileID: 1884498847}
+  minAmplitude: 0.1
+  maxAmplitude: 3
+  minWavelength: 1
+  maxWavelength: 10
+  minFrequency: 0.1
+  maxFrequency: 3
   electricFieldMaterial: {fileID: 2100000, guid: 4b40bafc4026d9c45856af2b02e1a802, type: 2}
   magneticFieldMaterial: {fileID: 2100000, guid: 781cc002badea8947b26cd5367fee296, type: 2}
   propagationMaterial: {fileID: 2100000, guid: 435b28f9e3b351c4db7758b1b39d587a, type: 2}
-  arrowRelativeSize: 0.5
+  arrowRelativeSize: 3
   showPropagationArrow: 1
+  debugMode: 1
 --- !u!1 &1650258935
 GameObject:
   m_ObjectHideFlags: 0
