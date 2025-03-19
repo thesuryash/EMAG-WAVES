@@ -131,7 +131,7 @@ public class Tabs : MonoBehaviour
 
     private string RandomNameString()
     {
-        List<string> list = new List<string> { "Tamara", "Davey", "Suryash", "Liyu", "Sabrina", "Grace", "Ryan <b>Tapping</b> (5)", "Phil Krasicky" };
+        List<string> list = new List<string> { "Tamara", "Davey", "Suryash", "Liyu", "Sabrina", "Grace", "Ryan <b>Tapping</b> (5)", "Phil Krasicky"};
         int listSize = list.Count;
         string nameText = "";
         List<string> ourList = new List<string>();
