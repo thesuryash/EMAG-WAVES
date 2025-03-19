@@ -362,7 +362,7 @@ public class Arrow
         Debug.Log("Looking for head prefab at: " + headPrefabPath);
         Debug.Log("Looking for tail prefab at: " + tailPrefabPath);
 
-        // Load and Instantiate Prefabs
+     
         GameObject headPrefab = null;
         GameObject tailPrefab = null;
 
@@ -501,6 +501,7 @@ public class Arrow
         // --------------------------------------------
         Debug.Log("Arrow constructor completed successfully.");
     }
+    //these are geometries for head and tail creation fallback
 
     // Create fallback cone for head
     private GameObject CreateFallbackHead()
@@ -599,7 +600,7 @@ public class Arrow
         }
     }
 
-    // Rest of the methods unchanged
+
     public void SetParent(GameObject parent)
     {
         this._parent = parent;
