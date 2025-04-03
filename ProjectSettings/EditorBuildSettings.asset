@@ -4,5 +4,14 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/EM-Waves.unity
+    guid: 87ebd6c18d7533e49af2476d87f9b084
+  - enabled: 1
+    path: Assets/Scenes/Gaussian-Flux.unity
+    guid: 4be8fec1f2979a243a58516df017f703
+  - enabled: 1
+    path: Assets/Scenes/Main-UI.unity
+    guid: 6daa07de2c567254ba2dc68c9548c907
   m_configObjects: {}

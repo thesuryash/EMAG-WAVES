@@ -11,7 +11,7 @@ public class SpreadLines : MonoBehaviour
     [SerializeField] private Slider ElectricField;
     [SerializeField] private GameObject ElectricFieldArrow;
     [SerializeField] private GameObject StaticArrowParent;
-/*    [SerializeField] private Slider Length;
+/*  [SerializeField] private Slider Length;
     [SerializeField] private Slider Width;*/
     private Vector3 pos;
     private Queue<LineRenderer> linePool = new Queue<LineRenderer>();

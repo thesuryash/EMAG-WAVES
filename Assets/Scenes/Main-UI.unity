@@ -284,7 +284,7 @@ RectTransform:
   m_GameObject: {fileID: 74364028}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.53716403, y: 0.53716403, z: 0.53716403}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 234897912}
@@ -292,7 +292,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -2.2464, y: -54.731087}
+  m_AnchoredPosition: {x: -2.2464, y: 1}
   m_SizeDelta: {x: 1838.9111, y: 865.1279}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &74364030
@@ -509,17 +509,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   panelScenePairs:
   - panel: {fileID: 1942075913}
-    sceneReference:
-      sceneAsset: {fileID: 102900000, guid: 4be8fec1f2979a243a58516df017f703, type: 3}
   - panel: {fileID: 156371979}
-    sceneReference:
-      sceneAsset: {fileID: 102900000, guid: c4bc078fd31352f4584ceee4c67070b3, type: 3}
   - panel: {fileID: 1592315860}
-    sceneReference:
-      sceneAsset: {fileID: 102900000, guid: 87ebd6c18d7533e49af2476d87f9b084, type: 3}
   - panel: {fileID: 597332468}
-    sceneReference:
-      sceneAsset: {fileID: 102900000, guid: f586e8b8838ebf649b356d0b0282d1bf, type: 3}
 --- !u!1 &597332468
 GameObject:
   m_ObjectHideFlags: 0

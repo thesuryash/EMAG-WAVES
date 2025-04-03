@@ -1,39 +1,50 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI; // Required for UI elements
+
+//Camera mainCamera = Camera.main;
+
 
 public class EMWaveManager : MonoBehaviour
 {
     [Header("Wave Properties")]
-    public float amplitude = 1.0f;      // Maximum field strength
-    public float wavelength = 5.0f;     // Distance between wave peaks
-    public float frequency = 1.0f;      // Wave oscillation speed
-    public int pointCount = 100;         // Number of field vectors to display
-    public float waveLength = 100.0f;    // Total length of wave visualization
+    [SerializeField]  public float amplitude = 4.0f;      // Maximum field strength
+    [SerializeField]  public float wavelength = 10.0f;     // Distance between wave peaks
+    [SerializeField]  public float frequency = 0.5f;      // Wave oscillation speed
+    [SerializeField]  public int pointCountPerWave = 200;         // Number of field vectors to display
+    [SerializeField] public int wavesPerAxis = 2;         // KEEEP THIS LOW OR I AM NOT SURE WHAT WILLL HAPPEN!!
+    [SerializeField] public float waveLength = 100.0f;
+
+    public int spaceBetweenWaves = 10;
+    // Total length of wave visualization
 
     [Header("UI Controls")]
-    public Slider amplitudeSlider;      // Reference to amplitude slider
-    public Slider wavelengthSlider;     // Reference to wavelength slider  
-    public Slider frequencySlider;      // Reference to frequency slider
+    [SerializeField]  public Slider amplitudeSlider;      // Reference to amplitude slider
+    [SerializeField] public Slider wavelengthSlider;     // Reference to wavelength slider  
+    [SerializeField] public Slider frequencySlider;      // Reference to frequency slider
+    [SerializeField] public TMP_InputField wavelengthInput;
+    [SerializeField] public TMP_InputField frequencyInput;
+    [SerializeField] public TMP_InputField amplitudeInput;
 
     [Header("UI Value Ranges")]
-    public float minAmplitude = 0.1f;   // Minimum amplitude value
-    public float maxAmplitude = 3.0f;   // Maximum amplitude value
-    public float minWavelength = 1.0f;  // Minimum wavelength value
-    public float maxWavelength = 10.0f; // Maximum wavelength value
-    public float minFrequency = 0.1f;   // Minimum frequency value
-    public float maxFrequency = 3.0f;   // Maximum frequency value
+    [SerializeField]  public float minAmplitude = 3f;   // Minimum amplitude value
+    [SerializeField] public float maxAmplitude = 5f;   // Maximum amplitude value
+    [SerializeField] public float minWavelength = 10.0f;  // Minimum wavelength value
+    [SerializeField] public float maxWavelength = 20.0f; // Maximum wavelength value
+    [SerializeField] public float minFrequency = 0.0f;   // Minimum frequency value
+    [SerializeField] public float maxFrequency = 1.0f;   // Maximum frequency value
 
     [Header("Visualization")]
-    public Material electricFieldMaterial;  // Material for E-field
-    public Material magneticFieldMaterial;  // Material for B-field 
-    public Material propagationMaterial;    // Material for propagation arrow 
-    public float arrowRelativeSize = 0.5f;
-    public bool showPropagationArrow = true;
+    [SerializeField] public Material electricFieldMaterial;  // Material for E-field
+    [SerializeField] public Material magneticFieldMaterial;  // Material for B-field 
+    [SerializeField] public Material propagationMaterial;    // Material for propagation arrow 
+    [SerializeField] public float arrowRelativeSize = 0.5f;
+    [SerializeField] public bool showPropagationArrow = true;
 
     [Header("Debug Options")]
-    public bool debugMode = true;       
+    [SerializeField] public bool debugMode = true;       
 
    
     private GameObject waveContainer;
@@ -52,7 +63,9 @@ public class EMWaveManager : MonoBehaviour
     {
         try
         {
-           //container creation
+            Camera MainCamera = Camera.main;
+
+            //container creation
             waveContainer = new GameObject("EM Wave Points");
             waveContainer.transform.parent = this.transform;
             waveContainer.transform.localPosition = Vector3.zero;
@@ -78,7 +91,33 @@ public class EMWaveManager : MonoBehaviour
         {
             Debug.LogError("Error in EMWaveManager Start(): " + e.Message);
         }
+
+        wavelengthInput.text = wavelengthSlider.value.ToString("0.000");
+        frequencyInput.text = frequencySlider.value.ToString("0.000");
+        amplitudeInput.text = amplitudeSlider.value.ToString("0.000");
+
+        wavelengthSlider.onValueChanged.AddListener(WavelengthListener);
+        frequencySlider.onValueChanged.AddListener(FrequencyListener);
+        amplitudeSlider.onValueChanged.AddListener (AmplitudeListener);
+
+
     }
+
+    void WavelengthListener(float valiue)
+    {
+        wavelengthInput.text = valiue.ToString("0.000");
+    }
+
+    void FrequencyListener(float value)
+    {
+        frequencyInput.text = value.ToString("0.000");
+    }
+
+    void AmplitudeListener(float value)
+    {
+        amplitudeInput.text = value.ToString("0.000");
+    }
+
 
     void SetupUIControls()
     {
@@ -198,9 +237,9 @@ public class EMWaveManager : MonoBehaviour
         try
         {
          
-            phase += Time.deltaTime * frequency * 2 * Mathf.PI;
+            phase += GlobalVariables.DeltaTime * frequency * 2 * Mathf.PI;
+            //phase += Time.deltaTime * frequency * 2 * Mathf.PI;
 
-          
             UpdateFieldVectors();
         }
         catch (System.Exception e)
@@ -213,7 +252,6 @@ public class EMWaveManager : MonoBehaviour
     {
         try
         {
-           
             foreach (var point in fieldPoints)
             {
                 Destroy(point);
@@ -223,61 +261,58 @@ public class EMWaveManager : MonoBehaviour
             magneticFieldArrows.Clear();
 
             // Calculate spacing between points
-            float spacing = waveLength / (pointCount - 1);
+            float spacing = waveLength / (pointCountPerWave - 1);
+            float spaceBetweenWaves = waveLength / 5; // Ensure we only create 5 waves on each axis
 
             if (debugMode)
-                Debug.Log($"Creating {pointCount} field points with spacing {spacing}");
+                Debug.Log($"Creating {pointCountPerWave} field points with spacing {spacing}");
 
-            // create field points along the z-axis (propagation direction)
-            for (int i = 0; i < pointCount; i++)
+            // Create field points along the Z-axis (propagation direction)
+            for (int i = 0; i < pointCountPerWave; i++) // Z-axis
             {
-                // Create a point GameObject to hold our arrows
-                GameObject point = new GameObject($"FieldPoint_{i}");
-                point.transform.parent = waveContainer.transform;
-                point.transform.localPosition = new Vector3(0, 0, i * spacing);
+                for (int j = 0; j < 3; j++) // Y-axis: Create 5 waves
+                {
+                    for (int k = 0; k < 3; k++) // X-axis: Create 5 waves
+                    {
+                        // Create a point GameObject to hold our arrows
+                        GameObject point = new GameObject($"FieldPoint_{i}{j}{k}");
+                        point.transform.parent = waveContainer.transform;
+                        point.transform.localPosition = new Vector3(k * spaceBetweenWaves, j * spaceBetweenWaves, i * spacing);
 
-                // Create child objects for each field component
-                GameObject eFieldObj = new GameObject("E-Field");
-                eFieldObj.transform.parent = point.transform;
-                eFieldObj.transform.localPosition = Vector3.zero;
+                        // Create child objects for each field component
+                        GameObject eFieldObj = new GameObject("E-Field");
+                        eFieldObj.transform.parent = point.transform;
+                        eFieldObj.transform.localPosition = Vector3.zero;
 
-                GameObject bFieldObj = new GameObject("B-Field");
-                bFieldObj.transform.parent = point.transform;
-                bFieldObj.transform.localPosition = Vector3.zero;
+                        GameObject bFieldObj = new GameObject("B-Field");
+                        bFieldObj.transform.parent = point.transform;
+                        bFieldObj.transform.localPosition = Vector3.zero;
 
-                if (debugMode && i == 0)
-                    Debug.Log("Creating first electric field arrow");
+                        // Create electric field arrow (points up/down along Y-axis)
+                        Arrow electricArrow = new Arrow(
+                            parent: eFieldObj,
+                            initialDirection: Vector3.up,  // E-field points vertically (Y-axis)
+                            lengthOfTail: 0,  // Initial length, will be updated in UpdateFieldVectors
+                            relativeSize: arrowRelativeSize,
+                            headMaterial: electricFieldMaterial,
+                            tailMaterial: electricFieldMaterial
+                        );
 
-                // Create electric field arrow (points up/down along y-axis)
-                Arrow electricArrow = new Arrow(
-                    parent: eFieldObj,
-                    initialDirection: Vector3.up,  // E-field points vertically (y-axis)
-                    lengthOfTail: 0,  // initial length, will be updated in UpdateFieldVectors
-                    relativeSize: arrowRelativeSize,
-                    headMaterial: electricFieldMaterial,
-                    tailMaterial: electricFieldMaterial
-                );
+                        // Create magnetic field arrow (points left/right along X-axis)
+                        Arrow magneticArrow = new Arrow(
+                            parent: bFieldObj,
+                            initialDirection: Vector3.right,  // B-field points horizontally (X-axis)
+                            lengthOfTail: 0,  // Initial tail length
+                            relativeSize: arrowRelativeSize,
+                            headMaterial: magneticFieldMaterial,
+                            tailMaterial: magneticFieldMaterial
+                        );
 
-                if (debugMode && i == 0)
-                    Debug.Log("Creating first magnetic field arrow");
-
-                // Create magnetic field arrow (points left/right along x-axis)
-                Arrow magneticArrow = new Arrow(
-                    parent: bFieldObj,
-                    initialDirection: Vector3.right,  // B-field points horizontally (x-axis)
-                    lengthOfTail: 0,  // initial tail length
-                    relativeSize: arrowRelativeSize,
-                    headMaterial: magneticFieldMaterial,
-                    tailMaterial: magneticFieldMaterial
-                );
-
-              
-                fieldPoints.Add(point);
-                electricFieldArrows.Add(electricArrow);
-                magneticFieldArrows.Add(magneticArrow);
-
-                if (debugMode && i == 0)
-                    Debug.Log("First field point created successfully");
+                        fieldPoints.Add(point);
+                        electricFieldArrows.Add(electricArrow);
+                        magneticFieldArrows.Add(magneticArrow);
+                    }
+                }
             }
 
             if (debugMode)
@@ -351,10 +386,13 @@ public class EMWaveManager : MonoBehaviour
         if (frequencySlider != null && Mathf.Abs(frequencySlider.value - newFrequency) > 0.01f)
         {
             frequencySlider.value = newFrequency;
+            frequencyInput.text = newFrequency.ToString();
+
+            if (debugMode)
+                Debug.Log($"Frequency set to {newFrequency}");
         }
 
-        if (debugMode)
-            Debug.Log($"Frequency set to {newFrequency}");
+
     }
 
     public void SetAmplitude(float newAmplitude)
@@ -365,10 +403,13 @@ public class EMWaveManager : MonoBehaviour
         if (amplitudeSlider != null && Mathf.Abs(amplitudeSlider.value - newAmplitude) > 0.01f)
         {
             amplitudeSlider.value = newAmplitude;
+            amplitudeInput.text = amplitude.ToString();
+
+            if (debugMode)
+                Debug.Log($"Amplitude set to {newAmplitude}");
         }
 
-        if (debugMode)
-            Debug.Log($"Amplitude set to {newAmplitude}");
+
     }
 
     public void SetWavelength(float newWavelength)
@@ -379,10 +420,13 @@ public class EMWaveManager : MonoBehaviour
         if (wavelengthSlider != null && Mathf.Abs(wavelengthSlider.value - newWavelength) > 0.01f)
         {
             wavelengthSlider.value = newWavelength;
+            wavelengthInput.text = wavelength.ToString();
+
+            if (debugMode)
+                Debug.Log($"Wavelength set to {newWavelength}");
         }
 
-        if (debugMode)
-            Debug.Log($"Wavelength set to {newWavelength}");
+
     }
 
     public void ResetWave()

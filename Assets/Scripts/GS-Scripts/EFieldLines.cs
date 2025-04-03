@@ -277,7 +277,7 @@ public class EFieldLines : MonoBehaviour
 
         for (int i = 0; i < nSampleCylinderH; i++)
         {
-            float y = baseHeight + height * i / nSampleCylinderH;
+            float y = baseHeight + height/(2*nSampleCylinderH) + height * i / nSampleCylinderH;
             UnityEngine.Vector3 center_offset = new UnityEngine.Vector3(cylinderCenter.x, y, cylinderCenter.z);
 
             for (int j = 0; j < nSampleCylinderR; j++)

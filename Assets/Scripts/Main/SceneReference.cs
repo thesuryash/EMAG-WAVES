@@ -2,10 +2,11 @@ using UnityEngine;
 using System;
 using UnityEditor;
 
-[Serializable]
+//[Serializable]
 public class SceneReference
 {
-    [SerializeField] private SceneAsset sceneAsset;
+    [SerializeField]
+    private SceneAsset sceneAsset;
 
     public string ScenePath => sceneAsset != null ? UnityEditor.AssetDatabase.GetAssetPath(sceneAsset) : string.Empty;
 

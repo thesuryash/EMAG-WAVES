@@ -11,6 +11,7 @@ public class Flux : MonoBehaviour
     [SerializeField] public float length = 1.0f;
     [SerializeField] public float width = 1.0f;
     [SerializeField] public float rotation = 1.0f;
+    [SerializeField] public float relativeScale = 1.0f;
 
     /*[SerializeField]*/
     private GameObject frame;
@@ -37,18 +38,18 @@ public class Flux : MonoBehaviour
     //Area Arrow
     private float area;
     [SerializeField] private GameObject areaArrowAttachedTo;
-    [SerializeField] private GameObject areaArrowTail;
-    [SerializeField] private GameObject areaArrowHead;
+    //[SerializeField] private GameObject areaArrowTail;
+    //[SerializeField] private GameObject areaArrowHead;
     [SerializeField] private Vector3 arrowheadDirection = new Vector3(0, 1, 0);
-    [SerializeField] private float initialLengthOfTail = 1f;    // Length of the arrow
+    [SerializeField] private float initialLengthOfTail = 10f;    // Length of the arrow
     [SerializeField] private GameObject arrowGameObject;        // The object where the script is attached
 
     private Arrow areaArrow;
     private Arrow fieldArrow;
     [SerializeField] private GameObject fieldArrowParent;
 
-    [SerializeField] private GameObject fieldArrowHead;
-    [SerializeField] private GameObject fieldArrowTail;
+    //[SerializeField] private GameObject fieldArrowHead;
+    //[SerializeField] private GameObject fieldArrowTail;
 
     //[SerializeField] private Button pausePlayButton;
     //[SerializeField] private bool isPlaying = false;
@@ -81,7 +82,7 @@ public class Flux : MonoBehaviour
     {
         float initialLength = Arrow.CalculateLengthByValue(area);
         //areaArrow = new Arrow(areaArrowAttachedTo, areaArrowHead, areaArrowTail, arrowheadDirection, initialLengthOfTail);
-        areaArrow = new Arrow(areaArrowAttachedTo, arrowheadDirection, initialLengthOfTail);
+        areaArrow = new Arrow(areaArrowAttachedTo, arrowheadDirection, initialLengthOfTail, relativeScale);
 
 
         //Setting up the sliders
@@ -94,7 +95,7 @@ public class Flux : MonoBehaviour
         fieldArrowParent.AddComponent<MeshFilter>();
 
         //fieldArrow = new Arrow(fieldArrowParent, fieldArrowHead, fieldArrowTail, new Vector3(0, 0, 1), arrowLength);
-        fieldArrow = new Arrow(fieldArrowParent, new Vector3(0, 0, 1), arrowLength);
+        fieldArrow = new Arrow(fieldArrowParent, new Vector3(0, 0, 1), arrowLength, relativeScale);
 
 
 
@@ -140,12 +141,12 @@ public class Flux : MonoBehaviour
         Debug.Log("Start method called.");
 
 
-        if (areaArrowAttachedTo == null || areaArrowTail == null || areaArrowHead == null || arrowGameObject == null)
-        {
-            Debug.LogError("One or more references are not set in   the Inspector.");
-            return;
+        //if (areaArrowAttachedTo == null || areaArrowTail == null || areaArrowHead == null || arrowGameObject == null)
+        //{
+        //    Debug.LogError("One or more references are not set in   the Inspector.");
+        //    return;
 
-        }
+        //}
         //Ensure that the arrow is instantiated with the correct parameters
         areaArrow.SetScene();
         areaArrow.SetTailLength(CalculateTailLengthByArea(CalculateArea(), 10f));
@@ -410,6 +411,4 @@ public class Flux : MonoBehaviour
     }
 
 }
-
-
 
