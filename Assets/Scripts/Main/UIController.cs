@@ -1,48 +1,69 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI; // Make sure to include this namespace
+using UnityEngine.UI;
 
 public class UIController : MonoBehaviour
 {
-    [SerializeField] private List<GameObjectScenePair> panelScenePairs; // List to hold pairs of panels and scene references
-
-    private Dictionary<GameObject, string> panelSceneDictionary;
+    [SerializeField] private List<ButtonScenePair> buttonScenePairs; // List of button-scene pairs
 
     private void Start()
     {
-        panelSceneDictionary = new Dictionary<GameObject, string>();
-
-        foreach (var pair in panelScenePairs)
+        foreach (var pair in buttonScenePairs)
         {
-            if (pair.panel != null && !string.IsNullOrEmpty(pair.sceneReference.SceneName))
+            if (pair.button != null && pair.sceneReference != null && !string.IsNullOrEmpty(pair.sceneReference.SceneName))
             {
-                panelSceneDictionary.Add(pair.panel, pair.sceneReference.SceneName);
-
-                // Ensure the panel has a Button component and attach the onClick listener
-                Button panelButton = pair.panel.GetComponent<Button>();
-                if (panelButton == null)
-                {
-                    panelButton = pair.panel.AddComponent<Button>();
-                }
-                panelButton.onClick.AddListener(() => LoadScene(pair.panel));
+                string sceneName = pair.sceneReference.SceneName; // Capture the scene name for closure
+                pair.button.onClick.AddListener(() => LoadScene(sceneName));
             }
             else
             {
-                Debug.LogError("Panel or scene reference is missing in one of the pairs.");
+                Debug.LogError("Button or scene reference is missing or invalid.");
             }
         }
     }
 
-    private void LoadScene(GameObject panel)
+    private void LoadScene(string sceneName)
     {
-        if (panelSceneDictionary.TryGetValue(panel, out string sceneName))
+        if (!string.IsNullOrEmpty(sceneName))
         {
             SceneManager.LoadScene(sceneName);
         }
         else
         {
-            Debug.LogError("Panel not found in the dictionary.");
+            Debug.LogError("Scene name is invalid or empty.");
+        }
+    }
+
+    [System.Serializable]
+    public class ButtonScenePair
+    {
+        public Button button; // Reference to the Button
+        public SceneReference sceneReference; // Reference to the Scene
+    }
+
+    [System.Serializable]
+    public class SceneReference
+    {
+        [SerializeField] private Object sceneAsset; // Reference to the SceneAsset
+
+        public string SceneName
+        {
+            get
+            {
+#if UNITY_EDITOR
+                // Ensure the object is a scene and retrieve its name
+                if (sceneAsset != null)
+                {
+                    string path = UnityEditor.AssetDatabase.GetAssetPath(sceneAsset);
+                    if (!string.IsNullOrEmpty(path) && path.EndsWith(".unity"))
+                    {
+                        return System.IO.Path.GetFileNameWithoutExtension(path);
+                    }
+                }
+#endif
+                return string.Empty;
+            }
         }
     }
 }

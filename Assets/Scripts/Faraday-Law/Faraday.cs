@@ -8,6 +8,11 @@ using UnityEngine.UI;
 
 public class Faraday : MonoBehaviour
 {
+
+    [Header("Faraday Values")]
+    [SerializeField] public float Resistance;
+    [SerializeField] public float frequency;
+
     [SerializeField] public float length = 1.0f;
     [SerializeField] public float width = 1.0f;
     [SerializeField] public float rotation = 1.0f;
@@ -16,7 +21,7 @@ public class Faraday : MonoBehaviour
     private GameObject frame;
 
     [SerializeField] public TMP_InputField electricFieldInput;
-    [SerializeField] public Slider electricFieldSlider;
+    [SerializeField] public Slider MagneticFieldSlider;
 
     [SerializeField] public TMP_Text fluxText;
     [SerializeField] public TMP_Text thetaText;
@@ -55,8 +60,8 @@ public class Faraday : MonoBehaviour
 
     private void Awake()
     {
-        electricFieldSlider.minValue = 0f;
-        electricFieldSlider.maxValue = 10f;
+        MagneticFieldSlider.minValue = 0f;
+        MagneticFieldSlider.maxValue = 10f;
         lengthSlider.minValue = 1.0f;
         lengthSlider.maxValue = 2.0f;
         widthSlider.minValue = 1.0f;
@@ -65,14 +70,14 @@ public class Faraday : MonoBehaviour
         rotationSlider.maxValue = 360f;
 
 
-        electricFieldSlider.value = 5f;
+        MagneticFieldSlider.value = 5f;
         lengthSlider.value = 1f;
         widthSlider.value = 1f;
         rotationSlider.value = 90f;
         rotationInput.text = "90.00";
 
         area = lengthSlider.value * widthSlider.value;
-        electricFieldMagnitude = electricFieldSlider.value;
+        electricFieldMagnitude = MagneticFieldSlider.value;
     }
 
     // Start is called before the first frame update
@@ -88,7 +93,7 @@ public class Faraday : MonoBehaviour
         frame = GetComponent<GameObject>();
 
 
-        float EFMagnitude = electricFieldSlider.value;
+        float EFMagnitude = MagneticFieldSlider.value;
         float arrowLength = 1f;
 
         fieldArrowParent.AddComponent<MeshFilter>();
@@ -99,7 +104,7 @@ public class Faraday : MonoBehaviour
 
 
         //Listeners
-        electricFieldSlider.onValueChanged.AddListener(OnElectricFieldSliderChanged);
+        MagneticFieldSlider.onValueChanged.AddListener(OnElectricFieldSliderChanged);
         lengthSlider.onValueChanged.AddListener(OnLengthSliderChanged);
         widthSlider.onValueChanged.AddListener(OnWidthSliderChanged);
         rotationSlider.onValueChanged.AddListener(OnRotationSliderChanged);
@@ -188,7 +193,7 @@ public class Faraday : MonoBehaviour
         areaArrow.SetTailLength(CalculateTailLengthByArea(CalculateArea(), 20f));
         RotateObject();
 
-        fieldArrow.SetTailLength(CalculateLengthByElectricField(electricFieldSlider.value, 20f));
+        fieldArrow.SetTailLength(CalculateLengthByElectricField(MagneticFieldSlider.value, 20f));
 
 
         //Debug.Log("area: " + area);
@@ -262,7 +267,7 @@ public class Faraday : MonoBehaviour
         if (float.TryParse(value, out float result))
         {
             electricFieldMagnitude = result;
-            electricFieldSlider.value = result;
+            MagneticFieldSlider.value = result;
             CalculateFlux();
         }
     }
@@ -312,14 +317,22 @@ public class Faraday : MonoBehaviour
         return area;
     }
 
+
+    public float FluxValue(float B, float A, float theta)
+    {
+        return B * A * Mathf.Cos(theta * (Mathf.PI / 180));
+    }
+
     void CalculateFlux()
     {
         float area = CalculateArea();
+
         float theta = rotationSlider.value - 90;
 
-        float flux = electricFieldMagnitude * area * Mathf.Cos(theta * (Mathf.PI / 180));
+        float flux = FluxValue(electricFieldMagnitude, area, theta);
         /*flux = Mathf.Abs(flux) ;*/
         //float thetaTextValue = 180 - Mathf.Abs(180 - theta);
+
         float thetaTextValue = Mathf.Abs(180 - Mathf.Abs(90 - theta));
 
 
@@ -329,6 +342,31 @@ public class Faraday : MonoBehaviour
         electricFieldInput.text = electricFieldMagnitude.ToString("F2");
 
         areaText.text = "Area: " + area.ToString("F2") + " m\u00B2";
+
+    }
+
+    public float EMFValue(float frequency, float B, float A, float t)
+    {
+        float angle = frequency * t;
+        float E = frequency * B * A * Mathf.Sin(angle * Mathf.PI / 180);
+
+        return E;
+    }
+
+    void CalculateEMF()
+    {
+        float emf = EMFValue(frequency, MagneticFieldSlider.value, (lengthSlider.value * widthSlider.value), (float)Time.deltaTime);
+    }
+
+    public float CurrentValue(float Resistance)
+    {
+        float emf = EMFValue(frequency, MagneticFieldSlider.value, (lengthSlider.value * widthSlider.value), (float)Time.deltaTime);
+
+        return emf / Resistance;
+    }
+
+    void CalculateCurrent()
+    {
 
     }
 

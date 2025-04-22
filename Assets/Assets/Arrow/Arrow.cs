@@ -47,8 +47,10 @@ public class Arrow
 
         try
         {
+#if UNITY_EDITOR
             headPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(headPrefabPath);
             tailPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(tailPrefabPath);
+#endif
 
             if (headPrefab == null)
             {
@@ -271,18 +273,26 @@ public class Arrow
 
     public static string RootPath
     {
+#if UNITY_EDITOR
         get
         {
             var g = AssetDatabase.FindAssets($"t:Script {nameof(Arrow)}");
+
             if (g.Length == 0)
             {
                 Debug.LogError("Cannot find Arrow script in project!");
                 return "Assets";
             }
             string path = AssetDatabase.GUIDToAssetPath(g[0]);
-            //Debug.Log("Found Arrow script at: " + path);
+            // Debug.Log("Found Arrow script at: " + path);
             return path;
         }
+#else
+    get
+    {
+        return "Assets"; // Default fallback for non-editor builds
+    }
+#endif
     }
 
 
@@ -346,6 +356,39 @@ public class Arrow
         catch (System.Exception e)
         {
             Debug.LogError("Error in Arrow.Update(): " + e.Message);
+        }
+    }
+
+    public void SetHeadColor(Color color)
+    {
+        try
+        {
+            if (_head != null && _head.GetComponent<Renderer>() != null)
+            {
+                // Create a new instance of the material
+                Material newMaterial = new Material(_head.GetComponent<Renderer>().material);
+                newMaterial.color = color;
+                _head.GetComponent<Renderer>().material = newMaterial;
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("Error in SetHeadColor(): " + e.Message);
+        }
+    }
+
+    public void ResetHeadColor(Material originalMaterial)
+    {
+        try
+        {
+            if (_head != null && _head.GetComponent<Renderer>() != null)
+            {
+                _head.GetComponent<Renderer>().material = originalMaterial;
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("Error in ResetHeadColor(): " + e.Message);
         }
     }
 

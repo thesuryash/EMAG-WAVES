@@ -16,12 +16,18 @@ public class EMWaveManager : MonoBehaviour
     [SerializeField]  public int pointCountPerWave = 200;         // Number of field vectors to display
     [SerializeField] public int wavesPerAxis = 2;         // KEEEP THIS LOW OR I AM NOT SURE WHAT WILLL HAPPEN!!
     [SerializeField] public float waveLength = 100.0f;
+    [SerializeField] public int waveRows = 1;
 
+    public float waveSpeed;
     public int spaceBetweenWaves = 10;
     // Total length of wave visualization
 
+    [Header("Wave Speed")]
+    [SerializeField] public bool keepWaveSpeedConstant = true;
+    [SerializeField] public float constantWaveSpeed = 62.83f; // 2pi 10 * 1 (default values)
+
     [Header("UI Controls")]
-    [SerializeField]  public Slider amplitudeSlider;      // Reference to amplitude slider
+    [SerializeField] public Slider amplitudeSlider;      // Reference to amplitude slider
     [SerializeField] public Slider wavelengthSlider;     // Reference to wavelength slider  
     [SerializeField] public Slider frequencySlider;      // Reference to frequency slider
     [SerializeField] public TMP_InputField wavelengthInput;
@@ -29,7 +35,7 @@ public class EMWaveManager : MonoBehaviour
     [SerializeField] public TMP_InputField amplitudeInput;
 
     [Header("UI Value Ranges")]
-    [SerializeField]  public float minAmplitude = 3f;   // Minimum amplitude value
+    [SerializeField] public float minAmplitude = 3f;   // Minimum amplitude value
     [SerializeField] public float maxAmplitude = 5f;   // Maximum amplitude value
     [SerializeField] public float minWavelength = 10.0f;  // Minimum wavelength value
     [SerializeField] public float maxWavelength = 20.0f; // Maximum wavelength value
@@ -43,19 +49,20 @@ public class EMWaveManager : MonoBehaviour
     [SerializeField] public float arrowRelativeSize = 0.5f;
     [SerializeField] public bool showPropagationArrow = true;
 
+    [Header("Peak Visualization")]
+    [SerializeField] public Color peakColor = new Color(0.7f, 0.1f, 0.1f); // Darker red
+    [SerializeField][Range(0.7f, 1.0f)] public float peakThreshold = 0.9f;
+    [SerializeField] public bool enablePeakColorChange = true;
     [Header("Debug Options")]
-    [SerializeField] public bool debugMode = true;       
-
-   
+    [SerializeField] public bool debugMode = true;    
+    
     private GameObject waveContainer;
     private GameObject propagationArrowObj;
 
-   
     private List<GameObject> fieldPoints = new List<GameObject>();
     private List<Arrow> electricFieldArrows = new List<Arrow>();
     private List<Arrow> magneticFieldArrows = new List<Arrow>();
     private Arrow propagationArrow;
-
 
     private float phase = 0.0f;
 
@@ -72,11 +79,12 @@ public class EMWaveManager : MonoBehaviour
 
             
             CheckMaterials();
-
-            
             SetupUIControls();
 
-     
+
+            // Calculate initial wave speed (2pi times lambda times f)
+            constantWaveSpeed = 2 * Mathf.PI * wavelength * frequency;
+
             if (showPropagationArrow)
             {
                 CreatePropagationArrow();
@@ -86,20 +94,21 @@ public class EMWaveManager : MonoBehaviour
 
             if (debugMode)
                 Debug.Log("EMWaveManager initialization complete");
+
         }
         catch (System.Exception e)
         {
             Debug.LogError("Error in EMWaveManager Start(): " + e.Message);
         }
 
+        waveSpeed = waveLength * frequency * 2 * Mathf.PI;
         wavelengthInput.text = wavelengthSlider.value.ToString("0.000");
         frequencyInput.text = frequencySlider.value.ToString("0.000");
         amplitudeInput.text = amplitudeSlider.value.ToString("0.000");
 
         wavelengthSlider.onValueChanged.AddListener(WavelengthListener);
         frequencySlider.onValueChanged.AddListener(FrequencyListener);
-        amplitudeSlider.onValueChanged.AddListener (AmplitudeListener);
-
+        amplitudeSlider.onValueChanged.AddListener(AmplitudeListener);
 
     }
 
@@ -130,6 +139,7 @@ public class EMWaveManager : MonoBehaviour
             amplitudeSlider.value = amplitude;
 
             amplitudeSlider.onValueChanged.AddListener(SetAmplitude);
+            amplitudeInput.onEndEdit.AddListener(onAmplitudeInputChanged);
 
             if (debugMode)
                 Debug.Log("Amplitude slider configured");
@@ -142,12 +152,12 @@ public class EMWaveManager : MonoBehaviour
         // wavelength slider
         if (wavelengthSlider != null)
         {
-           
             wavelengthSlider.minValue = minWavelength;
             wavelengthSlider.maxValue = maxWavelength;
             wavelengthSlider.value = wavelength;
 
             wavelengthSlider.onValueChanged.AddListener(SetWavelength);
+            wavelengthInput.onEndEdit.AddListener(onWavelengthInputChanged);
 
             if (debugMode)
                 Debug.Log("Wavelength slider configured");
@@ -160,13 +170,12 @@ public class EMWaveManager : MonoBehaviour
         // freq slider
         if (frequencySlider != null)
         {
-      
             frequencySlider.minValue = minFrequency;
             frequencySlider.maxValue = maxFrequency;
             frequencySlider.value = frequency;
-
           
             frequencySlider.onValueChanged.AddListener(SetFrequency);
+            frequencyInput.onEndEdit.AddListener(onFrequencyInputChanged);
 
             if (debugMode)
                 Debug.Log("Frequency slider configured");
@@ -236,8 +245,8 @@ public class EMWaveManager : MonoBehaviour
     {
         try
         {
-         
-            phase += GlobalVariables.DeltaTime * frequency * 2 * Mathf.PI;
+
+            phase += GlobalVariables.DeltaTime * frequency; // * 2 * Mathf.PI;
             //phase += Time.deltaTime * frequency * 2 * Mathf.PI;
 
             UpdateFieldVectors();
@@ -270,9 +279,9 @@ public class EMWaveManager : MonoBehaviour
             // Create field points along the Z-axis (propagation direction)
             for (int i = 0; i < pointCountPerWave; i++) // Z-axis
             {
-                for (int j = 0; j < 3; j++) // Y-axis: Create 5 waves
+                for (int j = 0; j < waveRows; j++) // Y-axis: Create 5 waves
                 {
-                    for (int k = 0; k < 3; k++) // X-axis: Create 5 waves
+                    for (int k = 0; k < waveRows; k++) // X-axis: Create 5 waves
                     {
                         // Create a point GameObject to hold our arrows
                         GameObject point = new GameObject($"FieldPoint_{i}{j}{k}");
@@ -324,6 +333,7 @@ public class EMWaveManager : MonoBehaviour
         }
     }
 
+    // Then update your UpdateFieldVectors method to check for peaks and change colors
     void UpdateFieldVectors()
     {
         try
@@ -333,23 +343,32 @@ public class EMWaveManager : MonoBehaviour
             {
                 // get the position along the propagation axis (z-axis)
                 float z = fieldPoints[i].transform.localPosition.z;
+                float pointPhase = phase + (z / wavelength) * 2 * Mathf.PI;
 
-                // calculate the phase at this position
-                float pointPhase = phase - (z / wavelength) * 2 * Mathf.PI;
-
-                // calculate electric field amplitude (oscillates along y-axis)
                 float eFieldStrength = amplitude * Mathf.Sin(pointPhase);
-
-                // calculate magnetic field amplitude (oscillates along x-axis)
                 float bFieldStrength = amplitude * Mathf.Sin(pointPhase);
 
-                // retrives child objects that hold our arrows
+              
                 Transform eFieldTransform = fieldPoints[i].transform.GetChild(0);
                 Transform bFieldTransform = fieldPoints[i].transform.GetChild(1);
-
-                // update electric field arrow (y-axis)
                 eFieldTransform.rotation = Quaternion.identity;  // Reset rotation
                 electricFieldArrows[i].SetTailLength(Mathf.Abs(eFieldStrength));
+
+                // Check if peak coloring is enabled and if the wave is near its peak
+                if (enablePeakColorChange)
+                {
+                    float normalizedEStrength = Mathf.Abs(eFieldStrength) / amplitude;
+                    if (normalizedEStrength >= peakThreshold)
+                    {
+                        // At or near peak, make arrow head p
+                        electricFieldArrows[i].SetHeadColor(peakColor);
+                    }
+                    else
+                    {
+                        // Not at peak, reset to original color
+                        electricFieldArrows[i].SetHeadColor(electricFieldMaterial.color);
+                    }
+                }
 
                 // set correct direction based on field sign
                 if (eFieldStrength < 0)
@@ -361,6 +380,22 @@ public class EMWaveManager : MonoBehaviour
                 // Update magnetic field arrow (x-axis)
                 bFieldTransform.rotation = Quaternion.Euler(0, 0, 90);  // Start pointing right
                 magneticFieldArrows[i].SetTailLength(Mathf.Abs(bFieldStrength));
+
+                // Check if peak coloring is enabled and if the wave is near its peak
+                if (enablePeakColorChange)
+                {
+                    float normalizedBStrength = Mathf.Abs(bFieldStrength) / amplitude;
+                    if (normalizedBStrength >= peakThreshold)
+                    {
+                        // At or near peak, make arrow head yellow
+                        magneticFieldArrows[i].SetHeadColor(peakColor);
+                    }
+                    else
+                    {
+                        // Not at peak, reset to original color
+                        magneticFieldArrows[i].SetHeadColor(magneticFieldMaterial.color);
+                    }
+                }
 
                 // correct direction based on field sign
                 if (bFieldStrength < 0)
@@ -375,12 +410,39 @@ public class EMWaveManager : MonoBehaviour
             Debug.LogError("Error updating field vectors: " + e.Message);
         }
     }
-
     // Methods for UI control
 
+    //public void SetFrequency(float newFrequency)
+    //{
+    //    //newFrequency = 1.0f; // wavelength does change when we set newFrequency to a constant WHY????
+    //    frequency = newFrequency;
+
+    //    // Update the slider value if it exists and doesn't match
+    //    if (frequencySlider != null && Mathf.Abs(frequencySlider.value - newFrequency) > 0.01f)
+    //    {
+    //        frequencySlider.value = newFrequency;
+    //        frequencyInput.text = newFrequency.ToString();
+
+    //        wavelength = waveSpeed / frequency;
+    //        SetWavelength(wavelength);
+
+
+    //        if (debugMode)
+    //            Debug.Log($"Frequency set to {newFrequency}");
+    //    }
+
+
+    //}
     public void SetFrequency(float newFrequency)
     {
         frequency = newFrequency;
+
+        // case for if we are keeping wavelength constant
+        if (keepWaveSpeedConstant && frequency > 0)
+        {
+            float newWavelength = constantWaveSpeed / (frequency * 2 * Mathf.PI);
+            wavelength = newWavelength;
+        }
 
         // Update the slider value if it exists and doesn't match
         if (frequencySlider != null && Mathf.Abs(frequencySlider.value - newFrequency) > 0.01f)
@@ -388,13 +450,17 @@ public class EMWaveManager : MonoBehaviour
             frequencySlider.value = newFrequency;
             frequencyInput.text = newFrequency.ToString();
 
+            if (keepWaveSpeedConstant && wavelengthSlider != null)
+            {
+                // Also update wavelength UI
+                wavelengthSlider.value = wavelength;
+                wavelengthInput.text = wavelength.ToString();
+            }
+
             if (debugMode)
-                Debug.Log($"Frequency set to {newFrequency}");
+                Debug.Log($"Frequency set to {newFrequency}, Wavelength adjusted to {wavelength}");
         }
-
-
     }
-
     public void SetAmplitude(float newAmplitude)
     {
         amplitude = newAmplitude;
@@ -416,18 +482,57 @@ public class EMWaveManager : MonoBehaviour
     {
         wavelength = newWavelength;
 
-        // same thing
+        // ifkeeping WAVE SPEED constant, adjust FREQUENCY accordingly
+        if (keepWaveSpeedConstant && wavelength > 0)
+        {
+            float newFrequency = constantWaveSpeed / (wavelength * 2 * Mathf.PI);
+            frequency = newFrequency;
+        }
+
+        //udate the slider value if it exists and doesn't match
         if (wavelengthSlider != null && Mathf.Abs(wavelengthSlider.value - newWavelength) > 0.01f)
         {
             wavelengthSlider.value = newWavelength;
             wavelengthInput.text = wavelength.ToString();
 
+            if (keepWaveSpeedConstant && frequencySlider != null)
+            {
+                // Also update frequency UI
+                frequencySlider.value = frequency;
+                frequencyInput.text = frequency.ToString();
+            }
+
             if (debugMode)
-                Debug.Log($"Wavelength set to {newWavelength}");
+                Debug.Log($"Wavelength set to {newWavelength}, Frequency adjusted to {frequency}");
         }
-
-
     }
+
+    public void onFrequencyInputChanged(string value)
+    {
+        if (float.TryParse(value, out float result))
+        {
+            SetFrequency(result);
+        }
+    }
+
+    public void onAmplitudeInputChanged(string value)
+    {
+        if (float.TryParse(value, out float result))
+        {
+            SetAmplitude(result);
+        }
+    }
+
+    public void onWavelengthInputChanged(string value)
+    {
+
+        if (float.TryParse(value, out float result))
+        {
+            SetWavelength(result);
+        }
+    }
+
+
 
     public void ResetWave()
     {

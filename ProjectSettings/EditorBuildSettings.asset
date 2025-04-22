@@ -6,12 +6,20 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/EM-Waves.unity
+    path: Assets/Scenes/MainMenu.unity
+    guid: 6daa07de2c567254ba2dc68c9548c907
+  - enabled: 1
+    path: Assets/Scenes/EMWaves.unity
     guid: 87ebd6c18d7533e49af2476d87f9b084
   - enabled: 1
-    path: Assets/Scenes/Gaussian-Flux.unity
+    path: Assets/Scenes/GaussianFlux.unity
     guid: 4be8fec1f2979a243a58516df017f703
   - enabled: 1
-    path: Assets/Scenes/Main-UI.unity
-    guid: 6daa07de2c567254ba2dc68c9548c907
-  m_configObjects: {}
+    path: Assets/Scenes/FaradayLaw.unity
+    guid: f586e8b8838ebf649b356d0b0282d1bf
+  - enabled: 1
+    path: Assets/Scenes/Gaussian-Surface.unity
+    guid: c4bc078fd31352f4584ceee4c67070b3
+  m_configObjects:
+    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: bba8611bf206696468f7d94712b3ccc1, type: 2}
+    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: bccc81628ab2b0647847011d5b650e5a, type: 2}

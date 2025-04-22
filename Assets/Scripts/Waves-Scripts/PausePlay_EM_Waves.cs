@@ -25,25 +25,18 @@ public class PausePlay_EM_Waves : MonoBehaviour
 
     private void OnPausePlayClicked()
     {
-        //Debug.Log("PausePlay button clicked. isPlaying: " + isPaused);
 
-        if (!isPaused) // Pausing the simulation
+        if (!isPaused)
         {
             GlobalVariables.IsPaused = true;
-
-
             buttonText.text = "Play";
 
-            //Debug.Log("Simulation paused.");
         }
-        else // Resuming the simulation
+        else
         {
             GlobalVariables.IsPaused = false;
-
-
             buttonText.text = "Pause";
 
-            //Debug.Log("Simulation resumed.");
         }
 
         // Toggle isPlaying state
