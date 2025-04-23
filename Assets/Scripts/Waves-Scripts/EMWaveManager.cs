@@ -10,13 +10,13 @@ using UnityEngine.UI; // Required for UI elements
 public class EMWaveManager : MonoBehaviour
 {
     [Header("Wave Properties")]
-    [SerializeField]  public float amplitude = 4.0f;      // Maximum field strength
-    [SerializeField]  public float wavelength = 10.0f;     // Distance between wave peaks
-    [SerializeField]  public float frequency = 0.5f;      // Wave oscillation speed
-    [SerializeField]  public int pointCountPerWave = 200;         // Number of field vectors to display
+    [SerializeField] public float amplitude = 4.0f;      // Maximum field strength
+    [SerializeField] public float wavelength = 10.0f;     // Distance between wave peaks
+    [SerializeField] public float frequency = 0.5f;      // Wave oscillation speed
+    [SerializeField] public int pointCountPerWave = 200;         // Number of field vectors to display
     [SerializeField] public int wavesPerAxis = 2;         // KEEEP THIS LOW OR I AM NOT SURE WHAT WILLL HAPPEN!!
     [SerializeField] public float waveLength = 100.0f;
-    [SerializeField] public int waveRows = 1;
+    [SerializeField] public int waveRows = 1; //this controls how many waves in parallel hooorizontally?
 
     public float waveSpeed;
     public int spaceBetweenWaves = 10;
@@ -54,8 +54,21 @@ public class EMWaveManager : MonoBehaviour
     [SerializeField][Range(0.7f, 1.0f)] public float peakThreshold = 0.9f;
     [SerializeField] public bool enablePeakColorChange = true;
     [Header("Debug Options")]
-    [SerializeField] public bool debugMode = true;    
-    
+    [SerializeField] public bool debugMode = true;
+
+    [Header("Optimization")]
+    [SerializeField] private bool useObjectPooling = true;
+    [SerializeField] private int initialPoolSize = 1000;
+    private List<GameObject> fieldPointPool = new List<GameObject>();
+    private List<Arrow> electricArrowPool = new List<Arrow>();
+    private List<Arrow> magneticArrowPool = new List<Arrow>();
+
+    [Header("Culling Settings")]
+    [SerializeField] private bool useDistanceCulling = true;
+    [SerializeField] private float maxViewDistance = 100f;
+    [SerializeField] private float cullingUpdateInterval = 0.2f; // How often to check distances
+    private float nextCullingUpdate = 0f;
+
     private GameObject waveContainer;
     private GameObject propagationArrowObj;
 
@@ -72,17 +85,15 @@ public class EMWaveManager : MonoBehaviour
         {
             Camera MainCamera = Camera.main;
 
-            //container creation
+            // Container creation
             waveContainer = new GameObject("EM Wave Points");
             waveContainer.transform.parent = this.transform;
             waveContainer.transform.localPosition = Vector3.zero;
 
-            
             CheckMaterials();
             SetupUIControls();
 
-
-            // Calculate initial wave speed (2pi times lambda times f)
+            // Calculate initial wave speed
             constantWaveSpeed = 2 * Mathf.PI * wavelength * frequency;
 
             if (showPropagationArrow)
@@ -90,11 +101,20 @@ public class EMWaveManager : MonoBehaviour
                 CreatePropagationArrow();
             }
 
+            // Initialize object pools
+            InitializeObjectPools();
+
+            // Create field points
             CreateFieldPoints();
 
             if (debugMode)
                 Debug.Log("EMWaveManager initialization complete");
 
+            if (useDistanceCulling)
+            {
+                nextCullingUpdate = Time.time + cullingUpdateInterval;
+                UpdateFieldPointCulling();
+            }
         }
         catch (System.Exception e)
         {
@@ -133,7 +153,7 @@ public class EMWaveManager : MonoBehaviour
         // amplitude slider
         if (amplitudeSlider != null)
         {
-           
+
             amplitudeSlider.minValue = minAmplitude;
             amplitudeSlider.maxValue = maxAmplitude;
             amplitudeSlider.value = amplitude;
@@ -173,7 +193,7 @@ public class EMWaveManager : MonoBehaviour
             frequencySlider.minValue = minFrequency;
             frequencySlider.maxValue = maxFrequency;
             frequencySlider.value = frequency;
-          
+
             frequencySlider.onValueChanged.AddListener(SetFrequency);
             frequencyInput.onEndEdit.AddListener(onFrequencyInputChanged);
 
@@ -207,6 +227,31 @@ public class EMWaveManager : MonoBehaviour
             Debug.LogWarning("Propagation material not assigned, creating default green material");
             propagationMaterial = new Material(Shader.Find("Standard"));
             propagationMaterial.color = Color.green;
+        }
+    }
+
+    void UpdateFieldPointCulling()
+    {
+        if (!useDistanceCulling) return;
+
+        Camera mainCamera = Camera.main;
+        if (mainCamera == null) return;
+
+        Vector3 cameraPosition = mainCamera.transform.position;
+
+        for (int i = 0; i < fieldPoints.Count; i++)
+        {
+            GameObject point = fieldPoints[i];
+            float distanceToCamera = Vector3.Distance(point.transform.position, cameraPosition);
+
+            // Only show points within the max view distance
+            bool shouldBeVisible = distanceToCamera <= maxViewDistance;
+
+            // Only change active state if it's different to avoid unnecessary SetActive calls
+            if (point.activeSelf != shouldBeVisible)
+            {
+                point.SetActive(shouldBeVisible);
+            }
         }
     }
 
@@ -245,11 +290,17 @@ public class EMWaveManager : MonoBehaviour
     {
         try
         {
+            phase += GlobalVariables.DeltaTime * frequency;
 
-            phase += GlobalVariables.DeltaTime * frequency; // * 2 * Mathf.PI;
-            //phase += Time.deltaTime * frequency * 2 * Mathf.PI;
-
+            // Update field vectors
             UpdateFieldVectors();
+
+            // Check if it's time to update culling
+            if (useDistanceCulling && Time.time >= nextCullingUpdate)
+            {
+                UpdateFieldPointCulling();
+                nextCullingUpdate = Time.time + cullingUpdateInterval;
+            }
         }
         catch (System.Exception e)
         {
@@ -257,82 +308,246 @@ public class EMWaveManager : MonoBehaviour
         }
     }
 
+    void InitializeObjectPools()
+    {
+        if (!useObjectPooling) return;
+
+        // Pre-create field points for the pool
+        for (int i = 0; i < initialPoolSize; i++)
+        {
+            // Create a point GameObject
+            GameObject point = new GameObject($"PooledFieldPoint_{i}");
+            point.transform.parent = waveContainer.transform;
+            point.SetActive(false);
+
+            // Create child objects for each field component
+            GameObject eFieldObj = new GameObject("E-Field");
+            eFieldObj.transform.parent = point.transform;
+            eFieldObj.transform.localPosition = Vector3.zero;
+
+            GameObject bFieldObj = new GameObject("B-Field");
+            bFieldObj.transform.parent = point.transform;
+            bFieldObj.transform.localPosition = Vector3.zero;
+
+            // electric field arrow
+            Arrow electricArrow = new Arrow(
+                parent: eFieldObj,
+                initialDirection: Vector3.up,
+                lengthOfTail: 0,
+                relativeSize: arrowRelativeSize,
+                headMaterial: electricFieldMaterial,
+                tailMaterial: electricFieldMaterial
+            );
+
+            // magnetic field arrow
+            Arrow magneticArrow = new Arrow(
+                parent: bFieldObj,
+                initialDirection: Vector3.right,
+                lengthOfTail: 0,
+                relativeSize: arrowRelativeSize,
+                headMaterial: magneticFieldMaterial,
+                tailMaterial: magneticFieldMaterial
+            );
+
+            // Add to pools
+            fieldPointPool.Add(point);
+            electricArrowPool.Add(electricArrow);
+            magneticArrowPool.Add(magneticArrow);
+        }
+
+        if (debugMode)
+            Debug.Log($"Initialized object pool with {initialPoolSize} objects");
+    }
+
+    GameObject GetFieldPointFromPool(Vector3 position)
+    {
+        if (!useObjectPooling)
+        {
+            // if not using pooling, we will create a new point
+            return CreateNewFieldPoint(position);
+        }
+
+        // Look for inactive point in pool
+        foreach (var point in fieldPointPool)
+        {
+            if (!point.activeInHierarchy)
+            {
+                point.transform.localPosition = position;
+                point.SetActive(true);
+                return point;
+            }
+        }
+
+        // If no inactive points available, expand the pool
+        if (debugMode)
+            Debug.Log("Pool expanded, adding more objects");
+
+        // Create a new point and add to pool
+        GameObject newPoint = CreateNewFieldPoint(position);
+        fieldPointPool.Add(newPoint);
+        return newPoint;
+    }
+    //pooling-based approach
+    private GameObject CreateNewFieldPoint(Vector3 position)
+    {
+        int index = fieldPointPool.Count;
+
+        // create a point GameObject
+        GameObject point = new GameObject($"PooledFieldPoint_{index}");
+        point.transform.parent = waveContainer.transform;
+        point.transform.localPosition = position;
+
+        // child objects for each field component
+        GameObject eFieldObj = new GameObject("E-Field");
+        eFieldObj.transform.parent = point.transform;
+        eFieldObj.transform.localPosition = Vector3.zero;
+
+        GameObject bFieldObj = new GameObject("B-Field");
+        bFieldObj.transform.parent = point.transform;
+        bFieldObj.transform.localPosition = Vector3.zero;
+
+        // create the arrows and add to our pooling
+        Arrow electricArrow = new Arrow(
+            parent: eFieldObj,
+            initialDirection: Vector3.up,
+            lengthOfTail: 0,
+            relativeSize: arrowRelativeSize,
+            headMaterial: electricFieldMaterial,
+            tailMaterial: electricFieldMaterial
+        );
+
+        Arrow magneticArrow = new Arrow(
+            parent: bFieldObj,
+            initialDirection: Vector3.right,
+            lengthOfTail: 0,
+            relativeSize: arrowRelativeSize,
+            headMaterial: magneticFieldMaterial,
+            tailMaterial: magneticFieldMaterial
+        );
+
+        electricArrowPool.Add(electricArrow);
+        magneticArrowPool.Add(magneticArrow);
+
+        return point;
+    }
+
     void CreateFieldPoints()
     {
         try
         {
+            // First, deactivate all currently active field points
             foreach (var point in fieldPoints)
             {
-                Destroy(point);
+                point.SetActive(false);
             }
+
             fieldPoints.Clear();
             electricFieldArrows.Clear();
             magneticFieldArrows.Clear();
 
             // Calculate spacing between points
             float spacing = waveLength / (pointCountPerWave - 1);
-            float spaceBetweenWaves = waveLength / 5; // Ensure we only create 5 waves on each axis
+            float spaceBetweenWaves = waveLength / 5;
 
             if (debugMode)
-                Debug.Log($"Creating {pointCountPerWave} field points with spacing {spacing}");
+                Debug.Log($"Creating {pointCountPerWave * waveRows * waveRows} field points with spacing {spacing}");
 
-            // Create field points along the Z-axis (propagation direction)
+            // Calculate the total number of points we'll need
+            int totalPoints = pointCountPerWave * waveRows * waveRows;
+
+            // Check if we need to expand the pool
+            if (useObjectPooling && fieldPointPool.Count < totalPoints)
+            {
+                int additionalPointsNeeded = totalPoints - fieldPointPool.Count;
+                if (debugMode)
+                    Debug.Log($"Need to add {additionalPointsNeeded} more points to the pool");
+
+                // Expand our pools if necessary
+                for (int i = 0; i < additionalPointsNeeded; i++)
+                {
+                    Vector3 dummyPosition = Vector3.zero;
+                    GameObject point = CreateNewFieldPoint(dummyPosition);
+                    point.SetActive(false);
+                    fieldPointPool.Add(point);
+                }
+            }
+
+            // Create field points
+            int poolIndex = 0;
             for (int i = 0; i < pointCountPerWave; i++) // Z-axis
             {
-                for (int j = 0; j < waveRows; j++) // Y-axis: Create 5 waves
+                for (int j = 0; j < waveRows; j++) // Y-axis
                 {
-                    for (int k = 0; k < waveRows; k++) // X-axis: Create 5 waves
+                    for (int k = 0; k < waveRows; k++) // X-axis
                     {
-                        // Create a point GameObject to hold our arrows
-                        GameObject point = new GameObject($"FieldPoint_{i}{j}{k}");
-                        point.transform.parent = waveContainer.transform;
-                        point.transform.localPosition = new Vector3(k * spaceBetweenWaves, j * spaceBetweenWaves, i * spacing);
+                        Vector3 position = new Vector3(k * spaceBetweenWaves, j * spaceBetweenWaves, i * spacing);
 
-                        // Create child objects for each field component
-                        GameObject eFieldObj = new GameObject("E-Field");
-                        eFieldObj.transform.parent = point.transform;
-                        eFieldObj.transform.localPosition = Vector3.zero;
+                        GameObject point;
+                        if (useObjectPooling)
+                        {
+                            // Get a point from the pool
+                            point = fieldPointPool[poolIndex];
+                            point.transform.localPosition = position;
+                            point.SetActive(true);
 
-                        GameObject bFieldObj = new GameObject("B-Field");
-                        bFieldObj.transform.parent = point.transform;
-                        bFieldObj.transform.localPosition = Vector3.zero;
+                            // Get the corresponding arrows
+                            electricFieldArrows.Add(electricArrowPool[poolIndex]);
+                            magneticFieldArrows.Add(magneticArrowPool[poolIndex]);
+                        }
+                        else
+                        {
+                            // The original way to create points
+                            point = new GameObject($"FieldPoint_{i}{j}{k}");
+                            point.transform.parent = waveContainer.transform;
+                            point.transform.localPosition = position;
 
-                        // Create electric field arrow (points up/down along Y-axis)
-                        Arrow electricArrow = new Arrow(
-                            parent: eFieldObj,
-                            initialDirection: Vector3.up,  // E-field points vertically (Y-axis)
-                            lengthOfTail: 0,  // Initial length, will be updated in UpdateFieldVectors
-                            relativeSize: arrowRelativeSize,
-                            headMaterial: electricFieldMaterial,
-                            tailMaterial: electricFieldMaterial
-                        );
+                            // Create child objects for each field component
+                            GameObject eFieldObj = new GameObject("E-Field");
+                            eFieldObj.transform.parent = point.transform;
+                            eFieldObj.transform.localPosition = Vector3.zero;
 
-                        // Create magnetic field arrow (points left/right along X-axis)
-                        Arrow magneticArrow = new Arrow(
-                            parent: bFieldObj,
-                            initialDirection: Vector3.right,  // B-field points horizontally (X-axis)
-                            lengthOfTail: 0,  // Initial tail length
-                            relativeSize: arrowRelativeSize,
-                            headMaterial: magneticFieldMaterial,
-                            tailMaterial: magneticFieldMaterial
-                        );
+                            GameObject bFieldObj = new GameObject("B-Field");
+                            bFieldObj.transform.parent = point.transform;
+                            bFieldObj.transform.localPosition = Vector3.zero;
+
+                            // Create electric field arrow
+                            Arrow electricArrow = new Arrow(
+                                parent: eFieldObj,
+                                initialDirection: Vector3.up,
+                                lengthOfTail: 0,
+                                relativeSize: arrowRelativeSize,
+                                headMaterial: electricFieldMaterial,
+                                tailMaterial: electricFieldMaterial
+                            );
+
+                            // Create magnetic field arrow
+                            Arrow magneticArrow = new Arrow(
+                                parent: bFieldObj,
+                                initialDirection: Vector3.right,
+                                lengthOfTail: 0,
+                                relativeSize: arrowRelativeSize,
+                                headMaterial: magneticFieldMaterial,
+                                tailMaterial: magneticFieldMaterial
+                            );
+
+                            electricFieldArrows.Add(electricArrow);
+                            magneticFieldArrows.Add(magneticArrow);
+                        }
 
                         fieldPoints.Add(point);
-                        electricFieldArrows.Add(electricArrow);
-                        magneticFieldArrows.Add(magneticArrow);
+                        poolIndex++;
                     }
                 }
             }
 
             if (debugMode)
-                Debug.Log($"Created {fieldPoints.Count} field points");
+                Debug.Log($"Created/activated {fieldPoints.Count} field points");
         }
         catch (System.Exception e)
         {
             Debug.LogError("Error creating field points: " + e.Message);
         }
     }
-
     // Then update your UpdateFieldVectors method to check for peaks and change colors
     void UpdateFieldVectors()
     {
@@ -341,6 +556,10 @@ public class EMWaveManager : MonoBehaviour
             // Update all field points
             for (int i = 0; i < fieldPoints.Count; i++)
             {
+                // Skip inactive field points
+                if (!fieldPoints[i].activeSelf)
+                    continue;
+
                 // get the position along the propagation axis (z-axis)
                 float z = fieldPoints[i].transform.localPosition.z;
                 float pointPhase = phase + (z / wavelength) * 2 * Mathf.PI;
@@ -348,59 +567,57 @@ public class EMWaveManager : MonoBehaviour
                 float eFieldStrength = amplitude * Mathf.Sin(pointPhase);
                 float bFieldStrength = amplitude * Mathf.Sin(pointPhase);
 
-              
+                // Rest of your existing field vector update code...
                 Transform eFieldTransform = fieldPoints[i].transform.GetChild(0);
                 Transform bFieldTransform = fieldPoints[i].transform.GetChild(1);
-                eFieldTransform.rotation = Quaternion.identity;  // Reset rotation
+
+                // Update electric field arrow (y-axis)
+                eFieldTransform.rotation = Quaternion.identity;
                 electricFieldArrows[i].SetTailLength(Mathf.Abs(eFieldStrength));
 
-                // Check if peak coloring is enabled and if the wave is near its peak
+                // Check if peak coloring is enabled
                 if (enablePeakColorChange)
                 {
                     float normalizedEStrength = Mathf.Abs(eFieldStrength) / amplitude;
                     if (normalizedEStrength >= peakThreshold)
                     {
-                        // At or near peak, make arrow head p
                         electricFieldArrows[i].SetHeadColor(peakColor);
                     }
                     else
                     {
-                        // Not at peak, reset to original color
                         electricFieldArrows[i].SetHeadColor(electricFieldMaterial.color);
                     }
                 }
 
-                // set correct direction based on field sign
+                // Set correct direction based on field sign
                 if (eFieldStrength < 0)
                 {
-                    eFieldTransform.rotation = Quaternion.Euler(0, 0, 180);  // Point down
+                    eFieldTransform.rotation = Quaternion.Euler(0, 0, 180);
                 }
                 electricFieldArrows[i].Update();
 
                 // Update magnetic field arrow (x-axis)
-                bFieldTransform.rotation = Quaternion.Euler(0, 0, 90);  // Start pointing right
+                bFieldTransform.rotation = Quaternion.Euler(0, 0, 90);
                 magneticFieldArrows[i].SetTailLength(Mathf.Abs(bFieldStrength));
 
-                // Check if peak coloring is enabled and if the wave is near its peak
+                // Check if peak coloring is enabled
                 if (enablePeakColorChange)
                 {
                     float normalizedBStrength = Mathf.Abs(bFieldStrength) / amplitude;
                     if (normalizedBStrength >= peakThreshold)
                     {
-                        // At or near peak, make arrow head yellow
                         magneticFieldArrows[i].SetHeadColor(peakColor);
                     }
                     else
                     {
-                        // Not at peak, reset to original color
                         magneticFieldArrows[i].SetHeadColor(magneticFieldMaterial.color);
                     }
                 }
 
-                // correct direction based on field sign
+                // Set correct direction based on field sign
                 if (bFieldStrength < 0)
                 {
-                    bFieldTransform.rotation = Quaternion.Euler(0, 0, 270);  // point left instead
+                    bFieldTransform.rotation = Quaternion.Euler(0, 0, 270);
                 }
                 magneticFieldArrows[i].Update();
             }
@@ -435,31 +652,48 @@ public class EMWaveManager : MonoBehaviour
     //}
     public void SetFrequency(float newFrequency)
     {
+        // Prevent division by zero
+        if (newFrequency <= 0.001f)
+        {
+            newFrequency = 0.001f;
+        }
+
         frequency = newFrequency;
 
-        // case for if we are keeping wavelength constant
+        // If keeping wave speed constant, adjust wavelength accordingly
         if (keepWaveSpeedConstant && frequency > 0)
         {
-            float newWavelength = constantWaveSpeed / (frequency * 2 * Mathf.PI);
+            float newWavelength = constantWaveSpeed / (2 * Mathf.PI * frequency);
+
+            // Only update wavelength value
             wavelength = newWavelength;
-        }
 
-        // Update the slider value if it exists and doesn't match
-        if (frequencySlider != null && Mathf.Abs(frequencySlider.value - newFrequency) > 0.01f)
-        {
-            frequencySlider.value = newFrequency;
-            frequencyInput.text = newFrequency.ToString();
-
-            if (keepWaveSpeedConstant && wavelengthSlider != null)
+            // Update wavelength UI elements
+            if (wavelengthSlider != null)
             {
-                // Also update wavelength UI
-                wavelengthSlider.value = wavelength;
-                wavelengthInput.text = wavelength.ToString();
+                // Make sure the value is within slider limits
+                wavelengthSlider.value = Mathf.Clamp(newWavelength, minWavelength, maxWavelength);
             }
 
-            if (debugMode)
-                Debug.Log($"Frequency set to {newFrequency}, Wavelength adjusted to {wavelength}");
+            if (wavelengthInput != null)
+            {
+                wavelengthInput.text = wavelength.ToString("0.000");
+            }
         }
+
+        // Update the frequency UI elements
+        if (frequencySlider != null)
+        {
+            frequencySlider.value = frequency;
+        }
+
+        if (frequencyInput != null)
+        {
+            frequencyInput.text = frequency.ToString("0.000");
+        }
+
+        if (debugMode)
+            Debug.Log($"Frequency set to {frequency}, Wavelength adjusted to {wavelength}, Wave speed: {2 * Mathf.PI * frequency * wavelength}");
     }
     public void SetAmplitude(float newAmplitude)
     {
@@ -480,33 +714,49 @@ public class EMWaveManager : MonoBehaviour
 
     public void SetWavelength(float newWavelength)
     {
+        // Prevent division by zero
+        if (newWavelength <= 0.001f)
+        {
+            newWavelength = 0.001f;
+        }
+
         wavelength = newWavelength;
 
-        // ifkeeping WAVE SPEED constant, adjust FREQUENCY accordingly
+        // If keeping wave speed constant, adjust frequency accordingly
         if (keepWaveSpeedConstant && wavelength > 0)
         {
-            float newFrequency = constantWaveSpeed / (wavelength * 2 * Mathf.PI);
+            float newFrequency = constantWaveSpeed / (2 * Mathf.PI * wavelength);
+
+            // Only update frequency value
             frequency = newFrequency;
-        }
 
-        //udate the slider value if it exists and doesn't match
-        if (wavelengthSlider != null && Mathf.Abs(wavelengthSlider.value - newWavelength) > 0.01f)
-        {
-            wavelengthSlider.value = newWavelength;
-            wavelengthInput.text = wavelength.ToString();
-
-            if (keepWaveSpeedConstant && frequencySlider != null)
+            // Update frequency UI elements
+            if (frequencySlider != null)
             {
-                // Also update frequency UI
-                frequencySlider.value = frequency;
-                frequencyInput.text = frequency.ToString();
+                // Make sure the value is within slider limits
+                frequencySlider.value = Mathf.Clamp(newFrequency, minFrequency, maxFrequency);
             }
 
-            if (debugMode)
-                Debug.Log($"Wavelength set to {newWavelength}, Frequency adjusted to {frequency}");
+            if (frequencyInput != null)
+            {
+                frequencyInput.text = frequency.ToString("0.000");
+            }
         }
-    }
 
+        // Update the wavelength UI elements
+        if (wavelengthSlider != null)
+        {
+            wavelengthSlider.value = wavelength;
+        }
+
+        if (wavelengthInput != null)
+        {
+            wavelengthInput.text = wavelength.ToString("0.000");
+        }
+
+        if (debugMode)
+            Debug.Log($"Wavelength set to {wavelength}, Frequency adjusted to {frequency}, Wave speed: {2 * Mathf.PI * frequency * wavelength}");
+    }
     public void onFrequencyInputChanged(string value)
     {
         if (float.TryParse(value, out float result))
@@ -557,7 +807,7 @@ public class EMWaveManager : MonoBehaviour
 
     void OnDestroy()
     {
-        // remove listeners to prevent memory leaks
+        // Remove listeners to prevent memory leaks
         if (amplitudeSlider != null)
             amplitudeSlider.onValueChanged.RemoveListener(SetAmplitude);
 
@@ -573,5 +823,10 @@ public class EMWaveManager : MonoBehaviour
 
         if (propagationArrowObj != null)
             Destroy(propagationArrowObj);
+
+        // clear pools
+        fieldPointPool.Clear();
+        electricArrowPool.Clear();
+        magneticArrowPool.Clear();
     }
 }
