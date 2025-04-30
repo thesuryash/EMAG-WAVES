@@ -1408,7 +1408,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 146916229}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.16042602, y: -0.6730477, z: 0.15302774, w: 0.70558685}
+  m_LocalRotation: {x: 0.16051883, y: -0.6727711, z: 0.15299937, w: 0.70583564}
   m_LocalPosition: {x: 0, y: 0, z: -136.93216}
   m_LocalScale: {x: 13.693216, y: 13.693214, z: 13.693214}
   m_ConstrainProportionsScale: 0
@@ -11586,8 +11586,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buttonScenePairs:
   - button: {fileID: 806754231}
-    sceneReference:
-      sceneAsset: {fileID: 102900000, guid: 6daa07de2c567254ba2dc68c9548c907, type: 3}
+    sceneName: __MainMenu__
 --- !u!1 &1365509076
 GameObject:
   m_ObjectHideFlags: 0
@@ -13733,7 +13732,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1597144166}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.16042604, y: -0.6730478, z: 0.15302776, w: 0.70558685}
+  m_LocalRotation: {x: 0.16051883, y: -0.67277116, z: 0.1529994, w: 0.70583564}
   m_LocalPosition: {x: 0, y: 0, z: -136.93216}
   m_LocalScale: {x: 0.78000003, y: 0.65999997, z: 1}
   m_ConstrainProportionsScale: 0

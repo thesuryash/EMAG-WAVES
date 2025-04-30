@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class PausePlay : MonoBehaviour
+public class PausePlayFaraday : MonoBehaviour
 {
     [SerializeField] private Button pausePlayButton;
     [SerializeField] private TextMeshProUGUI buttonText;
@@ -12,12 +12,24 @@ public class PausePlay : MonoBehaviour
     [SerializeField] private GameObject target;
     private float rotationSpeed = 50f;
     private Flux fluxScript;
-
+    [SerializeField] private Slider frequencySlider;
+    [SerializeField] private TMP_InputField frequencyInput;
+    private float frequency;
 
     void Start()
     {
         pausePlayButton.onClick.AddListener(OnPausePlayClicked);
         fluxScript = target.GetComponent<Flux>();
+
+        frequencySlider.maxValue = 150f;
+        frequencySlider.minValue = 0.0f;
+
+        frequencySlider.onValueChanged.AddListener(OnFrequencySliderChanged);
+        frequencyInput.onEndEdit.AddListener(OnFrequencyInputChanged);
+
+        frequencySlider.value = 50f;
+
+
     }
 
     private void OnPausePlayClicked()
@@ -37,6 +49,26 @@ public class PausePlay : MonoBehaviour
             fluxScript.rotationInput.interactable = true; // Enable input field
             Debug.Log("Rotation stopped.");
             UpdateRotation();
+        }
+    }
+
+    private void OnFrequencySliderChanged(float arg0)
+    {
+        frequency = arg0;
+        Faraday.frequency = arg0;
+        rotationSpeed = frequency;
+        frequencyInput.text = arg0.ToString();
+    }
+
+    private void OnFrequencyInputChanged(string arg0)
+    {
+        if (float.TryParse(arg0, out float result))
+        {
+            frequencySlider.value = result;
+            frequency = float.Parse(arg0);
+
+            Faraday.frequency = float.Parse(arg0);
+            rotationSpeed = frequency;
         }
     }
 

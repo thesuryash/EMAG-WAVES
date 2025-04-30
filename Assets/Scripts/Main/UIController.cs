@@ -11,14 +11,14 @@ public class UIController : MonoBehaviour
     {
         foreach (var pair in buttonScenePairs)
         {
-            if (pair.button != null && pair.sceneReference != null && !string.IsNullOrEmpty(pair.sceneReference.SceneName))
+            if (pair.button != null && !string.IsNullOrEmpty(pair.sceneName))
             {
-                string sceneName = pair.sceneReference.SceneName; // Capture the scene name for closure
+                string sceneName = pair.sceneName; // Capture the scene name for closure
                 pair.button.onClick.AddListener(() => LoadScene(sceneName));
             }
             else
             {
-                Debug.LogError("Button or scene reference is missing or invalid.");
+                Debug.LogError("Button or scene name is missing or invalid.");
             }
         }
     }
@@ -39,31 +39,6 @@ public class UIController : MonoBehaviour
     public class ButtonScenePair
     {
         public Button button; // Reference to the Button
-        public SceneReference sceneReference; // Reference to the Scene
-    }
-
-    [System.Serializable]
-    public class SceneReference
-    {
-        [SerializeField] private Object sceneAsset; // Reference to the SceneAsset
-
-        public string SceneName
-        {
-            get
-            {
-#if UNITY_EDITOR
-                // Ensure the object is a scene and retrieve its name
-                if (sceneAsset != null)
-                {
-                    string path = UnityEditor.AssetDatabase.GetAssetPath(sceneAsset);
-                    if (!string.IsNullOrEmpty(path) && path.EndsWith(".unity"))
-                    {
-                        return System.IO.Path.GetFileNameWithoutExtension(path);
-                    }
-                }
-#endif
-                return string.Empty;
-            }
-        }
+        public string sceneName; // Scene name to load
     }
 }

@@ -5,21 +5,22 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
-    path: Assets/Scenes/MainMenu.unity
+  - enabled: 0
+    path: Assets/Scenes/__MainMenu__.unity
     guid: 6daa07de2c567254ba2dc68c9548c907
   - enabled: 1
-    path: Assets/Scenes/EMWaves.unity
+    path: Assets/Scenes/__EMWaves__.unity
     guid: 87ebd6c18d7533e49af2476d87f9b084
-  - enabled: 1
-    path: Assets/Scenes/GaussianFlux.unity
+  - enabled: 0
+    path: Assets/Scenes/__GaussianFlux__.unity
     guid: 4be8fec1f2979a243a58516df017f703
-  - enabled: 1
-    path: Assets/Scenes/FaradayLaw.unity
+  - enabled: 0
+    path: Assets/Scenes/__FaradayLaw__.unity
     guid: f586e8b8838ebf649b356d0b0282d1bf
-  - enabled: 1
-    path: Assets/Scenes/Gaussian-Surface.unity
+  - enabled: 0
+    path: Assets/Scenes/__GaussianSurface__.unity
     guid: c4bc078fd31352f4584ceee4c67070b3
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: bba8611bf206696468f7d94712b3ccc1, type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: d0200304c3baea7489757e0f7ad0afb0, type: 2}
     com.unity.xr.openxr.settings4: {fileID: 11400000, guid: bccc81628ab2b0647847011d5b650e5a, type: 2}

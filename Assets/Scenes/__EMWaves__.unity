@@ -754,7 +754,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &120444644
 Transform:
   m_ObjectHideFlags: 0
@@ -1125,7 +1125,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 146916229}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.046489753, y: 0.20050406, z: 0.009525786, w: 0.97854286}
+  m_LocalRotation: {x: -0.048243243, y: 0.20041572, z: 0.009881429, w: 0.9784726}
   m_LocalPosition: {x: 0, y: 0, z: -136.93216}
   m_LocalScale: {x: 13.693216, y: 13.693214, z: 13.693214}
   m_ConstrainProportionsScale: 0
@@ -3912,6 +3912,7 @@ MonoBehaviour:
   wavelengthInput: {fileID: 1378838384}
   frequencyInput: {fileID: 1825382858}
   amplitudeInput: {fileID: 1729867185}
+  cameraTarget: {fileID: 0}
   minAmplitude: 3
   maxAmplitude: 5
   minWavelength: 1
@@ -3927,6 +3928,11 @@ MonoBehaviour:
   peakThreshold: 0.936
   enablePeakColorChange: 1
   debugMode: 1
+  useObjectPooling: 1
+  initialPoolSize: 1000
+  useDistanceCulling: 1
+  maxViewDistance: 100
+  cullingUpdateInterval: 0.2
 --- !u!1 &845993175
 GameObject:
   m_ObjectHideFlags: 0
@@ -4808,7 +4814,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1030380378
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6205,8 +6211,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buttonScenePairs:
   - button: {fileID: 1030380378}
-    sceneReference:
-      sceneAsset: {fileID: 102900000, guid: 6daa07de2c567254ba2dc68c9548c907, type: 3}
+    sceneName: __MainMenu__
 --- !u!1 &1341751119
 GameObject:
   m_ObjectHideFlags: 0
@@ -7581,7 +7586,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1597144166}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.046489753, y: 0.20050406, z: 0.0095257815, w: 0.97854286}
+  m_LocalRotation: {x: -0.048243254, y: 0.20041573, z: 0.009881428, w: 0.97847253}
   m_LocalPosition: {x: 0, y: 0, z: -136.93216}
   m_LocalScale: {x: 0.78000003, y: 0.65999997, z: 1}
   m_ConstrainProportionsScale: 0
@@ -7795,6 +7800,7 @@ MonoBehaviour:
   wavelengthInput: {fileID: 1378838384}
   frequencyInput: {fileID: 1825382858}
   amplitudeInput: {fileID: 1729867185}
+  cameraTarget: {fileID: 899101101}
   minAmplitude: 3
   maxAmplitude: 5
   minWavelength: 1
@@ -7805,11 +7811,16 @@ MonoBehaviour:
   magneticFieldMaterial: {fileID: 2100000, guid: 781cc002badea8947b26cd5367fee296, type: 2}
   propagationMaterial: {fileID: 2100000, guid: 435b28f9e3b351c4db7758b1b39d587a, type: 2}
   arrowRelativeSize: 1
-  showPropagationArrow: 1
+  showPropagationArrow: 0
   peakColor: {r: 0.96862745, g: 0.69444036, b: 0, a: 1}
   peakThreshold: 0.936
-  enablePeakColorChange: 1
+  enablePeakColorChange: 0
   debugMode: 1
+  useObjectPooling: 0
+  initialPoolSize: 1000
+  useDistanceCulling: 1
+  maxViewDistance: 100
+  cullingUpdateInterval: 0.2
 --- !u!1 &1650258935
 GameObject:
   m_ObjectHideFlags: 0
@@ -9253,6 +9264,7 @@ MonoBehaviour:
   zoomSpeedMouse: 60
   zoomSpeedTouch: 30
   rotationSpeed: 4
+  targetDist: 50
 --- !u!1 &2072229012
 GameObject:
   m_ObjectHideFlags: 0

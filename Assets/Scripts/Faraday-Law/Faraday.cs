@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -11,7 +12,10 @@ public class Faraday : MonoBehaviour
 
     [Header("Faraday Values")]
     [SerializeField] public float Resistance;
-    [SerializeField] public float frequency;
+    [SerializeField] public static float frequency;
+    [SerializeField] public Slider frequencySlider;
+    [SerializeField] public TMP_InputField frequencyInput;
+
 
     [SerializeField] public float length = 1.0f;
     [SerializeField] public float width = 1.0f;
@@ -24,8 +28,15 @@ public class Faraday : MonoBehaviour
     [SerializeField] public Slider MagneticFieldSlider;
 
     [SerializeField] public TMP_Text fluxText;
+    [SerializeField] public TMP_Text emfText;
+    [SerializeField] public TMP_Text currentText;
+
+
     [SerializeField] public TMP_Text thetaText;
     [SerializeField] public TMP_Text areaText;
+
+    [SerializeField] public GameObject cube;
+    
 
 
     [SerializeField] public Slider lengthSlider;
@@ -36,7 +47,7 @@ public class Faraday : MonoBehaviour
     [SerializeField] public TMP_InputField rotationInput;
 
 
-    [SerializeField] private float electricFieldMagnitude = 1f;
+    [SerializeField] private float magneticFieldMagnitude = 1f;
 
 
     //Area Arrow
@@ -60,6 +71,8 @@ public class Faraday : MonoBehaviour
 
     private void Awake()
     {
+        frequency = 1f;
+        Resistance = 10f;
         MagneticFieldSlider.minValue = 0f;
         MagneticFieldSlider.maxValue = 10f;
         lengthSlider.minValue = 1.0f;
@@ -77,7 +90,7 @@ public class Faraday : MonoBehaviour
         rotationInput.text = "90.00";
 
         area = lengthSlider.value * widthSlider.value;
-        electricFieldMagnitude = MagneticFieldSlider.value;
+        magneticFieldMagnitude = MagneticFieldSlider.value;
     }
 
     // Start is called before the first frame update
@@ -115,6 +128,9 @@ public class Faraday : MonoBehaviour
         lengthInput.onEndEdit.AddListener(OnLengthInputChanged);
         widthInput.onEndEdit.AddListener(OnWidthInputChanged);
         rotationInput.onEndEdit.AddListener(OnRotationInputChanged);
+        frequencySlider.onValueChanged.AddListener(OnFrequencySliderChanged);
+        frequencyInput.onEndEdit.AddListener(OnFrequencyInputChanged);
+
         //pausePlayButton.onClick.AddListener(OnPausePlayClicked);
 
         // For mobile input
@@ -124,34 +140,21 @@ public class Faraday : MonoBehaviour
         rotationInput.onSelect.AddListener(ShowMobileKeyboard);
 
 
-        lengthSlider.onValueChanged.AddListener(delegate { CalculateFlux(); });
-        widthSlider.onValueChanged.AddListener(delegate { CalculateFlux(); });
-        rotationSlider.onValueChanged.AddListener(delegate { CalculateFlux(); });
+        lengthSlider.onValueChanged.AddListener(delegate { CalculateFlux(); CalculateEMF();CalculateCurrent(); });
+        widthSlider.onValueChanged.AddListener(delegate { CalculateFlux(); CalculateEMF(); CalculateCurrent(); });
+        rotationSlider.onValueChanged.AddListener(delegate { CalculateFlux(); CalculateEMF(); CalculateCurrent(); });
 
 
         areaText.text = "Area: " + (lengthSlider.value * widthSlider.value).ToString("F2") + " m^2";
 
         CalculateFlux();
+        CalculateEMF(); CalculateCurrent();
         RotateObject();
 
 
         //Arrow
         RotateObject();
 
-        //For the area Arrow
-
-
-
-        Debug.Log("Start method called.");
-
-
-        //if (areaArrowAttachedTo == null || areaArrowTail == null || areaArrowHead == null || arrowGameObject == null)
-        //{
-        //    Debug.LogError("One or more references are not set in   the Inspector.");
-        //    return;
-
-        //}
-        //Ensure that the arrow is instantiated with the correct parameters
         areaArrow.SetScene();
         areaArrow.SetTailLength(CalculateTailLengthByArea(CalculateArea(), 10f));
 
@@ -160,6 +163,23 @@ public class Faraday : MonoBehaviour
 
 
     }
+
+    private void OnFrequencySliderChanged(float arg0)
+    {
+        frequency = arg0;
+    }
+
+    private void OnFrequencyInputChanged(string arg0)
+    {
+        if (float.TryParse(arg0, out float result))
+        {
+            frequencySlider.value = result;
+            frequency = float.Parse(arg0);
+            CalculateFlux();
+            CalculateEMF(); CalculateCurrent();
+        }
+    }
+
     private void OnPausePlayClicked()
     {
         //Debug.Log(isPlaying + "***********************************");
@@ -224,28 +244,29 @@ public class Faraday : MonoBehaviour
     void OnElectricFieldSliderChanged(float value)
     {
         float newElectricField = value;
-        float currentElectricField = electricFieldMagnitude;
-        electricFieldMagnitude = newElectricField;
+        float currentElectricField = magneticFieldMagnitude;
+        magneticFieldMagnitude = newElectricField;
         electricFieldInput.text = newElectricField.ToString();
         CalculateFlux();
+        CalculateEMF(); CalculateCurrent();
 
     }
 
     void OnLengthSliderChanged(float value)
     {
         float newLength = value * 0.05f; // Adjust as needed
-        float currentWidth = transform.localScale.z;
-        Vector3 newScale = new Vector3(newLength, transform.localScale.y, currentWidth);
-        transform.localScale = newScale;
+        float currentWidth = cube.transform.localScale.z;
+        Vector3 newScale = new Vector3(newLength, cube.transform.localScale.y, currentWidth);
+        cube.transform.localScale = newScale;
         lengthInput.text = value.ToString();
     }
 
     void OnWidthSliderChanged(float value)
     {
         float newWidth = value * 0.05f; // Adjust as needed
-        float currentLength = transform.localScale.x;
-        Vector3 newScale = new Vector3(currentLength, transform.localScale.y, newWidth);
-        transform.localScale = newScale;
+        float currentLength = cube.transform.localScale.x;
+        Vector3 newScale = new Vector3(currentLength, cube.transform.localScale.y, newWidth);
+        cube.transform.localScale = newScale;
         widthInput.text = value.ToString();
     }
 
@@ -257,7 +278,7 @@ public class Faraday : MonoBehaviour
     void RotateObject()
     {
         /*transform.Rotate(Vector3.up, rotationSlider.value * Time.deltaTime); */
-        transform.rotation = Quaternion.Euler(0, rotationSlider.value + 180, 90);
+        cube.transform.rotation = Quaternion.Euler(0, rotationSlider.value + 180, 90);
     }
 
 
@@ -266,9 +287,10 @@ public class Faraday : MonoBehaviour
     {
         if (float.TryParse(value, out float result))
         {
-            electricFieldMagnitude = result;
+            magneticFieldMagnitude = result;
             MagneticFieldSlider.value = result;
             CalculateFlux();
+            CalculateEMF(); CalculateCurrent();
         }
     }
 
@@ -278,6 +300,7 @@ public class Faraday : MonoBehaviour
         {
             lengthSlider.value = result;
             CalculateFlux();
+            CalculateEMF(); CalculateCurrent();
         }
     }
 
@@ -287,6 +310,7 @@ public class Faraday : MonoBehaviour
         {
             widthSlider.value = result;
             CalculateFlux();
+            CalculateEMF(); CalculateCurrent();
         }
     }
 
@@ -299,7 +323,7 @@ public class Faraday : MonoBehaviour
             rotationSlider.value = newRotation; // Assuming you also want to update a slider
             rotationInput.text = newRotation.ToString(); // Update the input field with clamped value
 
-            transform.rotation = Quaternion.Euler(0, newRotation, 0);
+            cube.transform.rotation = Quaternion.Euler(0, newRotation, 0);
         }
         else
         {
@@ -307,6 +331,7 @@ public class Faraday : MonoBehaviour
             rotationInput.text = rotationSlider.value.ToString(); // Reset to previous value or default
         }
         CalculateFlux();
+        CalculateEMF(); CalculateCurrent();
 
     }
 
@@ -329,17 +354,18 @@ public class Faraday : MonoBehaviour
 
         float theta = rotationSlider.value - 90;
 
-        float flux = FluxValue(electricFieldMagnitude, area, theta);
+        float flux = FluxValue(magneticFieldMagnitude, area, theta);
         /*flux = Mathf.Abs(flux) ;*/
         //float thetaTextValue = 180 - Mathf.Abs(180 - theta);
 
         float thetaTextValue = Mathf.Abs(180 - Mathf.Abs(90 - theta));
 
+        FaradayLawVariables.Flux = flux;
 
         fluxText.text = "Flux: " + flux.ToString("F2");
 
         thetaText.text = "Angle with +X axis: " + thetaTextValue.ToString("F2") + " \u00B0";
-        electricFieldInput.text = electricFieldMagnitude.ToString("F2");
+        electricFieldInput.text = magneticFieldMagnitude.ToString("F2");
 
         areaText.text = "Area: " + area.ToString("F2") + " m\u00B2";
 
@@ -348,26 +374,34 @@ public class Faraday : MonoBehaviour
     public float EMFValue(float frequency, float B, float A, float t)
     {
         float angle = frequency * t;
-        float E = frequency * B * A * Mathf.Sin(angle * Mathf.PI / 180);
+        float E = (float)System.Math.Round(frequency * B * A * Mathf.Sin(angle * Mathf.PI / 180), 3);
 
+        Debug.Log("Farady Script Frequency: " + frequency);
         return E;
     }
 
     void CalculateEMF()
     {
         float emf = EMFValue(frequency, MagneticFieldSlider.value, (lengthSlider.value * widthSlider.value), (float)Time.deltaTime);
+        FaradayLawVariables.EMF = emf;
+        // use this wherever suitable
+        emfText.text = $"EMF: "+emf.ToString();
+
     }
 
     public float CurrentValue(float Resistance)
     {
-        float emf = EMFValue(frequency, MagneticFieldSlider.value, (lengthSlider.value * widthSlider.value), (float)Time.deltaTime);
+        float emf = (float)System.Math.Round(EMFValue(frequency, MagneticFieldSlider.value, (lengthSlider.value * widthSlider.value), (float)Time.deltaTime),3);
 
         return emf / Resistance;
     }
 
     void CalculateCurrent()
     {
-
+        float current = CurrentValue(Resistance);
+        FaradayLawVariables.Current = current;
+        // use this wherever suitable
+        currentText.text = $"Current: " + current.ToString();
     }
 
     public float CalculateTailLengthByArea(float area, float maxLength)
@@ -399,23 +433,23 @@ public class Faraday : MonoBehaviour
     private void SnapToClosestPoint(float value)
     {
 
-        float closestValue = snapPoints[0];
-        float smallestDifference = Mathf.Abs(snapPoints[0] - value);
+        //float closestValue = snapPoints[0];
+        //float smallestDifference = Mathf.Abs(snapPoints[0] - value);
 
-        foreach (float snapPoint in snapPoints)
-        {
-            float difference = Mathf.Abs(snapPoint - value);
-            if (difference < smallestDifference)
-            {
-                smallestDifference = difference;
-                closestValue = snapPoint;
-            }
-        }
+        //foreach (float snapPoint in snapPoints)
+        //{
+        //    float difference = Mathf.Abs(snapPoint - value);
+        //    if (difference < smallestDifference)
+        //    {
+        //        smallestDifference = difference;
+        //        closestValue = snapPoint;
+        //    }
+        //}
 
-        if (smallestDifference <= threshold)
-        {
-            rotationSlider.value = closestValue;
-        }
+        //if (smallestDifference <= threshold)
+        //{
+        //    rotationSlider.value = closestValue;
+        //}
     }
 
     private void ShowMobileKeyboard(string text)

@@ -33,6 +33,7 @@ public class EMWaveManager : MonoBehaviour
     [SerializeField] public TMP_InputField wavelengthInput;
     [SerializeField] public TMP_InputField frequencyInput;
     [SerializeField] public TMP_InputField amplitudeInput;
+    [SerializeField] public GameObject cameraTarget;
 
     [Header("UI Value Ranges")]
     [SerializeField] public float minAmplitude = 3f;   // Minimum amplitude value
@@ -47,7 +48,7 @@ public class EMWaveManager : MonoBehaviour
     [SerializeField] public Material magneticFieldMaterial;  // Material for B-field 
     [SerializeField] public Material propagationMaterial;    // Material for propagation arrow 
     [SerializeField] public float arrowRelativeSize = 0.5f;
-    [SerializeField] public bool showPropagationArrow = true;
+    [SerializeField] public bool showPropagationArrow = false;
 
     [Header("Peak Visualization")]
     [SerializeField] public Color peakColor = new Color(0.7f, 0.1f, 0.1f); // Darker red
@@ -79,8 +80,12 @@ public class EMWaveManager : MonoBehaviour
 
     private float phase = 0.0f;
 
-    void Start()
+    private Vector3 avgPos;
+    private int count;
+
+    private void Awake()
     {
+
         try
         {
             Camera MainCamera = Camera.main;
@@ -107,6 +112,8 @@ public class EMWaveManager : MonoBehaviour
             // Create field points
             CreateFieldPoints();
 
+            cameraTarget.transform.position = avgPos;
+
             if (debugMode)
                 Debug.Log("EMWaveManager initialization complete");
 
@@ -120,6 +127,11 @@ public class EMWaveManager : MonoBehaviour
         {
             Debug.LogError("Error in EMWaveManager Start(): " + e.Message);
         }
+
+    }
+    void Start()
+    {
+  
 
         waveSpeed = waveLength * frequency * 2 * Mathf.PI;
         wavelengthInput.text = wavelengthSlider.value.ToString("0.000");
@@ -193,9 +205,11 @@ public class EMWaveManager : MonoBehaviour
             frequencySlider.minValue = minFrequency;
             frequencySlider.maxValue = maxFrequency;
             frequencySlider.value = frequency;
+            frequencySlider.interactable = false;
 
             frequencySlider.onValueChanged.AddListener(SetFrequency);
             frequencyInput.onEndEdit.AddListener(onFrequencyInputChanged);
+            frequencyInput.interactable = false;
 
             if (debugMode)
                 Debug.Log("Frequency slider configured");
@@ -260,6 +274,9 @@ public class EMWaveManager : MonoBehaviour
         try
         {
             propagationArrowObj = new GameObject("Propagation Direction");
+
+            propagationArrowObj.SetActive(false);
+
             propagationArrowObj.transform.parent = this.transform;
             propagationArrowObj.transform.localPosition = new Vector3(0, 0, -1.0f);
 
@@ -474,6 +491,8 @@ public class EMWaveManager : MonoBehaviour
 
             // Create field points
             int poolIndex = 0;
+            avgPos = Vector3.zero;
+            count = 0;
             for (int i = 0; i < pointCountPerWave; i++) // Z-axis
             {
                 for (int j = 0; j < waveRows; j++) // Y-axis
@@ -481,6 +500,8 @@ public class EMWaveManager : MonoBehaviour
                     for (int k = 0; k < waveRows; k++) // X-axis
                     {
                         Vector3 position = new Vector3(k * spaceBetweenWaves, j * spaceBetweenWaves, i * spacing);
+                        avgPos += position;
+                        count++;
 
                         GameObject point;
                         if (useObjectPooling)
@@ -539,6 +560,9 @@ public class EMWaveManager : MonoBehaviour
                     }
                 }
             }
+
+            avgPos  /= count;
+
 
             if (debugMode)
                 Debug.Log($"Created/activated {fieldPoints.Count} field points");

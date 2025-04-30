@@ -12,7 +12,7 @@ public class CameraOrbitQuaternionn : MonoBehaviour
     private float distanceToTarget;
     private float currentVerticalAngle = 0f;
     private float currentHorizontalAngle = 0f;
-
+    [SerializeField] private float targetDist;
 
     void Start()
     {
@@ -30,6 +30,8 @@ public class CameraOrbitQuaternionn : MonoBehaviour
         Vector3 angles = transform.eulerAngles;
         currentVerticalAngle = angles.x;
         currentHorizontalAngle = angles.y;
+
+        if (targetDist == 0) targetDist = 200f;
     }
 
     private bool isNewPinch = true; // Flag to detect start of a new pinch
@@ -41,7 +43,7 @@ public class CameraOrbitQuaternionn : MonoBehaviour
 
         float scroll = Input.GetAxis("Mouse ScrollWheel");
         distanceToTarget -= scroll * zoomSpeedMouse;
-        distanceToTarget = Mathf.Clamp(distanceToTarget, 5f, 200f);
+        distanceToTarget = Mathf.Clamp(distanceToTarget, 5f, targetDist);
 
 
         /*if (Input.touchCount == 2)

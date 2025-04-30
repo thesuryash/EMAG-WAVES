@@ -514,6 +514,7 @@ GameObject:
   m_Component:
   - component: {fileID: 449699454}
   - component: {fileID: 449699455}
+  - component: {fileID: 449699456}
   m_Layer: 5
   m_Name: Controller
   m_TagString: Untagged
@@ -554,17 +555,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buttonScenePairs:
   - button: {fileID: 1942075917}
-    sceneReference:
-      sceneAsset: {fileID: 102900000, guid: 4be8fec1f2979a243a58516df017f703, type: 3}
+    sceneName: __GaussianFlux__
   - button: {fileID: 156371983}
-    sceneReference:
-      sceneAsset: {fileID: 102900000, guid: c4bc078fd31352f4584ceee4c67070b3, type: 3}
+    sceneName: __GaussianSurface__
   - button: {fileID: 1592315864}
-    sceneReference:
-      sceneAsset: {fileID: 102900000, guid: 87ebd6c18d7533e49af2476d87f9b084, type: 3}
+    sceneName: __EMWaves__
   - button: {fileID: 597332472}
-    sceneReference:
-      sceneAsset: {fileID: 102900000, guid: f586e8b8838ebf649b356d0b0282d1bf, type: 3}
+    sceneName: __FaradayLaw__
+--- !u!114 &449699456
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 449699453}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 12cb08886e0833145bb222f80f50ed9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &597332468
 GameObject:
   m_ObjectHideFlags: 0

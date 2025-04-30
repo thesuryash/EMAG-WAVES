@@ -5,20 +5,20 @@ using UnityEngine.UI;
 
 public class LoadScene : MonoBehaviour
 {
-    [SerializeField] private List<ButtonScenePair> buttonScenePairs; // List of buttons and scene references
+    [SerializeField] private List<ButtonScenePair> buttonScenePairs; // List of buttons and scene names
 
     private void Start()
     {
         foreach (var pair in buttonScenePairs)
         {
-            if (pair.button != null && pair.sceneReference != null && !string.IsNullOrEmpty(pair.sceneReference.SceneName))
+            if (pair.button != null && !string.IsNullOrEmpty(pair.sceneName))
             {
-                // Attach the onClick listener to the button
-                pair.button.onClick.AddListener(() => LoadScene_(pair.sceneReference.SceneName));
+                string sceneName = pair.sceneName; // Capture the scene name for closure
+                pair.button.onClick.AddListener(() => LoadScene_(sceneName));
             }
             else
             {
-                Debug.LogError("Button or scene reference is missing in one of the pairs.");
+                Debug.LogError("Button or scene name is missing or invalid in one of the pairs.");
             }
         }
     }
@@ -38,32 +38,7 @@ public class LoadScene : MonoBehaviour
     [System.Serializable]
     public class ButtonScenePair
     {
-        public Button button; // Reference to the button
-        public SceneReference sceneReference; // Reference to the scene
-    }
-
-    [System.Serializable]
-    public class SceneReference
-    {
-        [SerializeField] private Object sceneAsset; // Reference to the SceneAsset
-
-        public string SceneName
-        {
-            get
-            {
-#if UNITY_EDITOR
-                // Ensure the object is a scene and retrieve its name
-                if (sceneAsset != null)
-                {
-                    string path = UnityEditor.AssetDatabase.GetAssetPath(sceneAsset);
-                    if (!string.IsNullOrEmpty(path) && path.EndsWith(".unity"))
-                    {
-                        return System.IO.Path.GetFileNameWithoutExtension(path);
-                    }
-                }
-#endif
-                return string.Empty;
-            }
-        }
+        public Button button; // Reference to the Button
+        public string sceneName; // Name of the Scene to load
     }
 }
