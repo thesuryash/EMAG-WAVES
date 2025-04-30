@@ -19,7 +19,7 @@
             {
                 "type": "System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
                 "key": "buildOutputDirList",
-                "value": "{\"m_Value\":\"C:/Users/kc359/Unity/EM-Waves/PHYS2213 EM Simulations/Build/EMWAVE Solo Build;C:/Users/kc359/Unity/EM-Waves/PHYS2213 EM Simulations/Build;C:/Users/kc359/Downloads/Suryash-Test-GS/Suryash-Test-GS/Build;C:/Users/kc359/Downloads/Suryash-Test-GS/Suryash-Test-GS/WebGL Builds;C:/Users/cit-atc/Unity/Build;C:/Users/cit-atc/Unity;C:/Users/cit-atc/Unity/Gaussian Surface/WebGL Builds;;;\"}"
+                "value": "{\"m_Value\":\"C:/Users/kc359/Unity/EM-Waves/PHYS2213 EM Simulations/Build/test;C:/Users/kc359/Unity/EM-Waves/PHYS2213 EM Simulations/Build/EMWAVE Solo Build;C:/Users/kc359/Unity/EM-Waves/PHYS2213 EM Simulations/Build;C:/Users/kc359/Downloads/Suryash-Test-GS/Suryash-Test-GS/Build;C:/Users/kc359/Downloads/Suryash-Test-GS/Suryash-Test-GS/WebGL Builds;C:/Users/cit-atc/Unity/Build;C:/Users/cit-atc/Unity;C:/Users/cit-atc/Unity/Gaussian Surface/WebGL Builds;;\"}"
             }
         ]
     }

@@ -323,6 +323,9 @@ public class EMWaveManager : MonoBehaviour
         {
             Debug.LogError("Error in EMWaveManager Update(): " + e.Message);
         }
+
+        cameraTarget.transform.position = avgPos;
+
     }
 
     void InitializeObjectPools()
