@@ -340,39 +340,10 @@ public class EMWaveManager : MonoBehaviour
             point.transform.parent = waveContainer.transform;
             point.SetActive(false);
 
-            // Create child objects for each field component
-            GameObject eFieldObj = new GameObject("E-Field");
-            eFieldObj.transform.parent = point.transform;
-            eFieldObj.transform.localPosition = Vector3.zero;
-
-            GameObject bFieldObj = new GameObject("B-Field");
-            bFieldObj.transform.parent = point.transform;
-            bFieldObj.transform.localPosition = Vector3.zero;
-
-            // electric field arrow
-            Arrow electricArrow = new Arrow(
-                parent: eFieldObj,
-                initialDirection: Vector3.up,
-                lengthOfTail: 0,
-                relativeSize: arrowRelativeSize,
-                headMaterial: electricFieldMaterial,
-                tailMaterial: electricFieldMaterial
-            );
-
-            // magnetic field arrow
-            Arrow magneticArrow = new Arrow(
-                parent: bFieldObj,
-                initialDirection: Vector3.right,
-                lengthOfTail: 0,
-                relativeSize: arrowRelativeSize,
-                headMaterial: magneticFieldMaterial,
-                tailMaterial: magneticFieldMaterial
-            );
-
             // Add to pools
             fieldPointPool.Add(point);
-            electricArrowPool.Add(electricArrow);
-            magneticArrowPool.Add(magneticArrow);
+            electricFieldArrows.Add(CreateArrow("Electric", point));
+            magneticFieldArrows.Add(CreateArrow("Magnetic", point));
         }
 
         if (debugMode)
@@ -417,36 +388,8 @@ public class EMWaveManager : MonoBehaviour
         point.transform.parent = waveContainer.transform;
         point.transform.localPosition = position;
 
-        // child objects for each field component
-        GameObject eFieldObj = new GameObject("E-Field");
-        eFieldObj.transform.parent = point.transform;
-        eFieldObj.transform.localPosition = Vector3.zero;
-
-        GameObject bFieldObj = new GameObject("B-Field");
-        bFieldObj.transform.parent = point.transform;
-        bFieldObj.transform.localPosition = Vector3.zero;
-
-        // create the arrows and add to our pooling
-        Arrow electricArrow = new Arrow(
-            parent: eFieldObj,
-            initialDirection: Vector3.up,
-            lengthOfTail: 0,
-            relativeSize: arrowRelativeSize,
-            headMaterial: electricFieldMaterial,
-            tailMaterial: electricFieldMaterial
-        );
-
-        Arrow magneticArrow = new Arrow(
-            parent: bFieldObj,
-            initialDirection: Vector3.right,
-            lengthOfTail: 0,
-            relativeSize: arrowRelativeSize,
-            headMaterial: magneticFieldMaterial,
-            tailMaterial: magneticFieldMaterial
-        );
-
-        electricArrowPool.Add(electricArrow);
-        magneticArrowPool.Add(magneticArrow);
+        electricFieldArrows.Add(CreateArrow("Electric", point));
+        magneticFieldArrows.Add(CreateArrow("Magnetic", point));
 
         return point;
     }
@@ -489,6 +432,7 @@ public class EMWaveManager : MonoBehaviour
                     GameObject point = CreateNewFieldPoint(dummyPosition);
                     point.SetActive(false);
                     fieldPointPool.Add(point);
+
                 }
             }
 
@@ -525,37 +469,8 @@ public class EMWaveManager : MonoBehaviour
                             point.transform.parent = waveContainer.transform;
                             point.transform.localPosition = position;
 
-                            // Create child objects for each field component
-                            GameObject eFieldObj = new GameObject("E-Field");
-                            eFieldObj.transform.parent = point.transform;
-                            eFieldObj.transform.localPosition = Vector3.zero;
-
-                            GameObject bFieldObj = new GameObject("B-Field");
-                            bFieldObj.transform.parent = point.transform;
-                            bFieldObj.transform.localPosition = Vector3.zero;
-
-                            // Create electric field arrow
-                            Arrow electricArrow = new Arrow(
-                                parent: eFieldObj,
-                                initialDirection: Vector3.up,
-                                lengthOfTail: 0,
-                                relativeSize: arrowRelativeSize,
-                                headMaterial: electricFieldMaterial,
-                                tailMaterial: electricFieldMaterial
-                            );
-
-                            // Create magnetic field arrow
-                            Arrow magneticArrow = new Arrow(
-                                parent: bFieldObj,
-                                initialDirection: Vector3.right,
-                                lengthOfTail: 0,
-                                relativeSize: arrowRelativeSize,
-                                headMaterial: magneticFieldMaterial,
-                                tailMaterial: magneticFieldMaterial
-                            );
-
-                            electricFieldArrows.Add(electricArrow);
-                            magneticFieldArrows.Add(magneticArrow);
+                            electricFieldArrows.Add(CreateArrow("Electric", point));
+                            magneticFieldArrows.Add(CreateArrow("Magnetic", point));
                         }
 
                         fieldPoints.Add(point);
@@ -575,6 +490,28 @@ public class EMWaveManager : MonoBehaviour
             Debug.LogError("Error creating field points: " + e.Message);
         }
     }
+    // Helper function: create Arrow instances
+    Arrow CreateArrow(string type, GameObject parent = null)
+    {
+        GameObject arrowObj = new GameObject(type + " Arrow");
+        arrowObj.transform.parent = parent ? parent.transform : null;
+        arrowObj.transform.localPosition = Vector3.zero;
+
+
+        // Add arrow setup
+        Arrow arrow = new Arrow(
+            parent: arrowObj,
+            initialDirection: type == "Electric" ? Vector3.up : Vector3.right,
+            lengthOfTail: 0,
+            relativeSize: arrowRelativeSize,
+            headMaterial: type == "Electric" ? electricFieldMaterial : magneticFieldMaterial,
+            tailMaterial: type == "Electric" ? electricFieldMaterial : magneticFieldMaterial
+        );
+
+        return arrow;
+    }
+
+
     // Then update your UpdateFieldVectors method to check for peaks and change colors
     void UpdateFieldVectors()
     {
@@ -654,29 +591,8 @@ public class EMWaveManager : MonoBehaviour
             Debug.LogError("Error updating field vectors: " + e.Message);
         }
     }
+
     // Methods for UI control
-
-    //public void SetFrequency(float newFrequency)
-    //{
-    //    //newFrequency = 1.0f; // wavelength does change when we set newFrequency to a constant WHY????
-    //    frequency = newFrequency;
-
-    //    // Update the slider value if it exists and doesn't match
-    //    if (frequencySlider != null && Mathf.Abs(frequencySlider.value - newFrequency) > 0.01f)
-    //    {
-    //        frequencySlider.value = newFrequency;
-    //        frequencyInput.text = newFrequency.ToString();
-
-    //        wavelength = waveSpeed / frequency;
-    //        SetWavelength(wavelength);
-
-
-    //        if (debugMode)
-    //            Debug.Log($"Frequency set to {newFrequency}");
-    //    }
-
-
-    //}
     public void SetFrequency(float newFrequency)
     {
         // Prevent division by zero
