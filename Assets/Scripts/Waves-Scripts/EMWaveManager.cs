@@ -685,7 +685,7 @@ public class EMWaveManager : MonoBehaviour
             newFrequency = 0.001f;
         }
 
-        frequency = newFrequency;
+        frequency = Mathf.Clamp(newFrequency, minFrequency, maxFrequency);
 
         // If keeping wave speed constant, adjust wavelength accordingly
         if (keepWaveSpeedConstant && frequency > 0)
@@ -724,16 +724,15 @@ public class EMWaveManager : MonoBehaviour
     }
     public void SetAmplitude(float newAmplitude)
     {
-        amplitude = newAmplitude;
+        amplitude = Mathf.Clamp(newAmplitude, minAmplitude, maxAmplitude);
 
-        // same thing
-        if (amplitudeSlider != null && Mathf.Abs(amplitudeSlider.value - newAmplitude) > 0.01f)
+        if (amplitudeSlider != null && Mathf.Abs(amplitudeSlider.value - amplitude) > 0.01f)
         {
-            amplitudeSlider.value = newAmplitude;
+            amplitudeSlider.value = amplitude;
             amplitudeInput.text = amplitude.ToString();
 
             if (debugMode)
-                Debug.Log($"Amplitude set to {newAmplitude}");
+                Debug.Log($"Amplitude set to {amplitude}");
         }
 
 
@@ -747,7 +746,7 @@ public class EMWaveManager : MonoBehaviour
             newWavelength = 0.001f;
         }
 
-        wavelength = newWavelength;
+        wavelength = Mathf.Clamp(newWavelength, minWavelength, maxWavelength);
 
         // If keeping wave speed constant, adjust frequency accordingly
         if (keepWaveSpeedConstant && wavelength > 0)
