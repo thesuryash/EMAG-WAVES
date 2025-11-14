@@ -80,6 +80,12 @@ public class Flux : MonoBehaviour
 
     void Start()
     {
+
+        if(areaArrowAttachedTo == null)
+        {
+            areaArrowAttachedTo = fieldArrowParent;
+        }
+
         float initialLength = Arrow.CalculateLengthByValue(area);
         //areaArrow = new Arrow(areaArrowAttachedTo, areaArrowHead, areaArrowTail, arrowheadDirection, initialLengthOfTail);
         areaArrow = new Arrow(areaArrowAttachedTo, arrowheadDirection, initialLengthOfTail, relativeScale);
@@ -322,7 +328,8 @@ public class Flux : MonoBehaviour
         /*flux = Mathf.Abs(flux) ;*/
         //float thetaTextValue = 180 - Mathf.Abs(180 - theta);
         float thetaTextValue = Mathf.Abs(180 - Mathf.Abs(90 - theta));
-
+        
+        GlobalVariables.theta = thetaTextValue;
 
         fluxText.text = "Flux: " + flux.ToString("F2");
 

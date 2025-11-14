@@ -8,11 +8,19 @@ public class GlobalVariables : MonoBehaviour
     public static float omega = 5f;
     public static float E0 = 10.0f;
     public static float B0 = 10.0f;
+    public static float theta = 90f;
 
     public static float k => 2 * Mathf.PI / lambda;
 
     private static bool _isPaused = false; // Backing field for 'IsPaused'
     private static float _deltaTime = 0f; // Backing field for 'DeltaTime'
+
+    // Property for 'GetThetaRotation'
+    public static float GetThetaRotation
+    {
+        get => theta;
+        set => theta = value;
+    }
 
     // Property for 'IsPaused'
     public static bool IsPaused

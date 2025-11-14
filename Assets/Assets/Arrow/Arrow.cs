@@ -18,8 +18,8 @@ public class Arrow
     private Vector3 _lastParentScale;
     private float _lastParentArea;
     private float _relativeSize;
-
-    private Vector3 parentSize;
+    private Vector3 _headBaseScale;
+    private Vector3 _tailBaseScale;
 
     // Constructor
     public Arrow(GameObject parent, Vector3 initialDirection = default, float lengthOfTail = 1, float relativeSize = 1f, Material headMaterial = null, Material tailMaterial = null)
@@ -79,11 +79,18 @@ public class Arrow
 
         // --------------------------------------------
         // Set Parent-Child Hierarchy
-        head_.transform.SetParent(parent.transform);
-        tail_.transform.SetParent(parent.transform);
+        // Use worldPositionStays = false so the prefab's local transform is preserved
+        head_.transform.SetParent(parent.transform, false);
+        tail_.transform.SetParent(parent.transform, false);
 
         this._head = head_;
         this._tail = tail_;
+
+        // Ensure local position/rotation are clean so subsequent calculations are stable
+        this._head.transform.localPosition = Vector3.zero;
+        this._head.transform.localRotation = Quaternion.identity;
+        this._tail.transform.localPosition = Vector3.zero;
+        this._tail.transform.localRotation = Quaternion.identity;
 
         // --------------------------------------------
         // Initialize Other Attributes
@@ -93,78 +100,14 @@ public class Arrow
         this.lastParentRotation = this._parent.transform.rotation;
         this._lastParentScale = this._parent.transform.localScale;
         this._lastParentArea = 0;
+        this._relativeSize = Mathf.Max(relativeSize, 0.0001f);
 
-        // --------------------------------------------
-        // Normalize Arrow Size Relative to Parent
-        try
-        {
-            if (this._parent.GetComponent<Renderer>() != null)
-            {
-                parentSize = this._parent.GetComponent<Renderer>().bounds.size;
-            }
-            else
-            {
-                Debug.Log("No Renderer found on parent. Using transform scale.");
-                parentSize = this._parent.transform.localScale;
-            }
-        }
-        catch
-        {
-            Debug.Log("Error getting parent size. Defaulting to transform scale.");
-            parentSize = this._parent.transform.localScale;
-        }
+        // Cache original prefab scales so we can rebuild them in world space without distortion
+        _headBaseScale = _head.transform.localScale;
+        _tailBaseScale = _tail.transform.localScale;
 
-        Vector3 headSize = Vector3.one;
-
-        Vector3 tailSize = Vector3.one;
-
-        try
-        {
-            if (_head.GetComponent<Renderer>() != null)
-                headSize = _head.GetComponent<Renderer>().bounds.size;
-
-            if (_tail.GetComponent<Renderer>() != null)
-                tailSize = _tail.GetComponent<Renderer>().bounds.size;
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError("Error getting arrow component size: " + e.Message);
-        }
-
-        float normalizationFactor = 0.2f; // Default value if calculation fails
-
-        try
-        {
-            // Avoid division by zero
-            if (headSize.x + tailSize.x > 0 && headSize.y + tailSize.y > 0 && headSize.z + tailSize.z > 0)
-            {
-                normalizationFactor = Mathf.Min(
-                    parentSize.x / (headSize.x ),
-                    parentSize.y / (headSize.y ),
-                    parentSize.z / (headSize.z ),
-                    parentSize.x / (tailSize.x),
-                    parentSize.y / (tailSize.y),
-                    parentSize.z / (tailSize.z)
-
-                );
-            }
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError("Error in normalization calculation: " + e.Message);
-        }
-
-        // Apply scaling
-        try
-        {
-            _head.transform.localScale *= normalizationFactor * relativeSize;
-            _tail.transform.localScale *= normalizationFactor * relativeSize;
-
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError("Error applying scale: " + e.Message);
-        }
+        ApplyHeadScale();
+        ApplyTailScale();
 
         // --------------------------------------------
         // Setting the material
@@ -299,6 +242,16 @@ public class Arrow
     public void SetParent(GameObject parent)
     {
         this._parent = parent;
+        if (_head != null)
+        {
+            _head.transform.SetParent(parent != null ? parent.transform : null, true);
+        }
+        if (_tail != null)
+        {
+            _tail.transform.SetParent(parent != null ? parent.transform : null, true);
+        }
+        ApplyHeadScale();
+        ApplyTailScale();
     }
 
     public void SetInitialDirection(Vector3 direction)
@@ -311,6 +264,7 @@ public class Arrow
         if (length >= 0)
         {
             this._currentTailLength = length;
+            ApplyTailScale();
         }
     }
 
@@ -396,12 +350,14 @@ public class Arrow
     {
         try
         {
-            this._tail.transform.position = CalculateTailOffsetPosition();
-            this._tail.transform.rotation = this._parent.transform.rotation;
+            if (this._tail == null || this._parent == null)
+            {
+                return;
+            }
 
-            float x = this._tail.transform.localScale.x;
-            float z = this._tail.transform.localScale.z;
-            this._tail.transform.localScale = new Vector3(x, this._currentTailLength, z);
+            this._tail.transform.rotation = this._parent.transform.rotation;
+            this._tail.transform.position = CalculateTailOffsetPosition();
+            ApplyTailScale();
         }
         catch (System.Exception e)
         {
@@ -421,21 +377,78 @@ public class Arrow
         return 0;
     }
 
+    private void ApplyHeadScale()
+    {
+        if (_head == null)
+        {
+            return;
+        }
+
+        Vector3 desiredWorldScale = _headBaseScale * _relativeSize;
+        Vector3 parentScale = ResolveParentScale(_head.transform);
+        _head.transform.localScale = DivideVector3(desiredWorldScale, parentScale);
+    }
+
+    private void ApplyTailScale()
+    {
+        if (_tail == null)
+        {
+            return;
+        }
+
+        Vector3 desiredWorldScale = new Vector3(
+            _tailBaseScale.x * _relativeSize,
+            _currentTailLength,
+            _tailBaseScale.z * _relativeSize);
+        // Convert world target scale into local space so parent scaling does not distort the arrow.
+        Vector3 parentScale = ResolveParentScale(_tail.transform);
+        _tail.transform.localScale = DivideVector3(desiredWorldScale, parentScale);
+    }
+
+    private Vector3 ResolveParentScale(Transform child)
+    {
+        if (child != null && child.parent != null)
+        {
+            Vector3 scale = child.parent.lossyScale;
+            if (Mathf.Approximately(scale.x, 0f)) scale.x = 1f;
+            if (Mathf.Approximately(scale.y, 0f)) scale.y = 1f;
+            if (Mathf.Approximately(scale.z, 0f)) scale.z = 1f;
+            return scale;
+        }
+        return Vector3.one;
+    }
+
+    private static Vector3 DivideVector3(Vector3 numerator, Vector3 denominator)
+    {
+        return new Vector3(
+            SafeDivide(numerator.x, denominator.x),
+            SafeDivide(numerator.y, denominator.y),
+            SafeDivide(numerator.z, denominator.z));
+    }
+
+    private static float SafeDivide(float numerator, float denominator)
+    {
+        if (Mathf.Approximately(denominator, 0f))
+        {
+            return numerator;
+        }
+        return numerator / denominator;
+    }
+
     private Vector3 CalculateTailOffsetPosition()
     {
         try
         {
-            // Calculate half the Y scale
-            float halfYScale = this._tail.transform.localScale.y / 2;
+            if (this._tail == null)
+            {
+                return this._parent != null ? this._parent.transform.position : Vector3.zero;
+            }
 
-            // Get the direction vector from the tail's rotation
+            float halfLength = this._currentTailLength * 0.5f;
             Vector3 direction = this._tail.transform.rotation * Vector3.up;
-
-            // Scale the direction vector by half the Y scale
-            Vector3 offset = direction * halfYScale;
-
-            // Calculate the new tail position
-            Vector3 tailPosition = this._parent.transform.position + offset;
+            Vector3 parentPosition = this._parent != null ? this._parent.transform.position : Vector3.zero;
+            Vector3 offset = direction * halfLength;
+            Vector3 tailPosition = parentPosition + offset;
 
             return tailPosition;
         }
@@ -450,14 +463,14 @@ public class Arrow
     {
         try
         {
-            float halfYScale = this._tail.transform.localScale.y / 2;
+            if (this._tail == null)
+            {
+                return this._parent != null ? this._parent.transform.position : Vector3.zero;
+            }
 
             Vector3 direction = this._tail.transform.rotation * Vector3.up;
-
-            Vector3 tailCenterPosition = this._tail.transform.position;
-
-            Vector3 offset = direction * halfYScale;
-
+            float halfLength = this._currentTailLength * 0.5f;
+            Vector3 offset = direction * halfLength;
             Vector3 headPosition = this._tail.transform.position + offset;
 
             return headPosition;
@@ -473,11 +486,17 @@ public class Arrow
     {
         try
         {
+            if (this._head == null || this._tail == null)
+            {
+                return;
+            }
+
             EnsureHeadIsEnabled();
+            ApplyHeadScale();
 
             this._head.transform.position = CalculateHeadOffsetPosition();
 
-            if (this._tail.transform.localScale.y < 0)
+            if (this._currentTailLength < 0)
             {
                 this._head.transform.rotation = Quaternion.AngleAxis(180, Vector3.up) * this._tail.transform.rotation;
             }
@@ -496,15 +515,18 @@ public class Arrow
     {
         try
         {
-            // Check if the local scale of the tail in the Y direction is zero
-            if (this._tail.transform.localScale.y == 0)
+            if (this._head == null || this._tail == null)
+            {
+                return;
+            }
+
+            if (Mathf.Approximately(this._currentTailLength, 0f))
             {
                 this._head.gameObject.SetActive(false);
+                return;
             }
-            else if (this._tail.transform.localScale.y != 0)
-            {
-                this._head.gameObject.SetActive(true);
-            }
+
+            this._head.gameObject.SetActive(true);
         }
         catch (System.Exception e)
         {
