@@ -9,7 +9,7 @@ public class EMWAVE : MonoBehaviour
 {
     // Wave properties
     public int points = 100;
-    public float wavelength = 5.000f;
+    public float wavelength = 10.000f;
     public float amplitude = 2.000f;
     public float frequency = 2.000f;
 
@@ -37,11 +37,11 @@ public class EMWAVE : MonoBehaviour
         if (frequencyInput == null) Debug.LogError("Frequency InputField is NULL!");
 
         // Adjust slider ranges
-        wavelengthSlider.minValue = 0f;
+        wavelengthSlider.minValue = 5f;
         amplitudeSlider.minValue = 0f;
         frequencySlider.minValue = 0f;
 
-        wavelengthSlider.maxValue = 10f;
+        wavelengthSlider.maxValue = 15f;
         amplitudeSlider.maxValue = 10f;
         frequencySlider.maxValue = 10f;
 

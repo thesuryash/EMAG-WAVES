@@ -1125,7 +1125,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 146916229}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.5085804, y: 0.17429397, z: 0.10596785, w: 0.83650374}
+  m_LocalRotation: {x: -0.28735334, y: 0.19166237, z: 0.058802385, w: 0.9366088}
   m_LocalPosition: {x: 0, y: 0, z: -136.93216}
   m_LocalScale: {x: 13.693216, y: 13.693214, z: 13.693214}
   m_ConstrainProportionsScale: 0
@@ -7680,7 +7680,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1597144166}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.50858045, y: 0.17429397, z: 0.10596785, w: 0.8365037}
+  m_LocalRotation: {x: -0.28735337, y: 0.19166242, z: 0.058802396, w: 0.93660873}
   m_LocalPosition: {x: 0, y: 0, z: -136.93216}
   m_LocalScale: {x: 0.78000003, y: 0.65999997, z: 1}
   m_ConstrainProportionsScale: 0
@@ -7895,10 +7895,10 @@ MonoBehaviour:
   frequencyInput: {fileID: 1825382858}
   amplitudeInput: {fileID: 1729867185}
   cameraTarget: {fileID: 899101101}
-  minAmplitude: 3
-  maxAmplitude: 5
-  minWavelength: 1
-  maxWavelength: 10
+  minAmplitude: 2
+  maxAmplitude: 6
+  minWavelength: 5
+  maxWavelength: 15
   minFrequency: 0.1
   maxFrequency: 3
   electricFieldMaterial: {fileID: 2100000, guid: 4b40bafc4026d9c45856af2b02e1a802, type: 2}

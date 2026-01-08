@@ -345,7 +345,7 @@ public class Faraday : MonoBehaviour
 
     public float FluxValue(float B, float A, float theta)
     {
-        return B * A * Mathf.Cos(theta * (Mathf.PI / 180));
+        return B * A * Mathf.Sin(theta * (Mathf.PI / 180));
     }
 
     void CalculateFlux()

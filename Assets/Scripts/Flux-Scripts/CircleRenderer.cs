@@ -1,17 +1,16 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(LineRenderer))]
 public class CircleRenderer : MonoBehaviour
 {
     [Header("Circle Settings")]
-    public float radius = 0.5f;             // Distance from center to circle edge
-    [Range(3, 512)] public int segments = 100;  // Number of line segments
+    public float radius = 0.5f;
+    [Range(3, 512)] public int segments = 100;
 
-    [Header("Sector Settings")]
-    [Range(0f, 360f)] public float startAngle = 0f;   // In degrees
-    [Range(0f, 360f)] public float endAngle = 180f;   // In degrees
-
-    [SerializeField] public GameObject centerObj;
+    [SerializeField] private GameObject centerObj;
+    [SerializeField] private Slider rotationSlider;
+    [SerializeField] private bool debugDraw = false;
 
     private LineRenderer lineRenderer;
 
@@ -19,41 +18,38 @@ public class CircleRenderer : MonoBehaviour
     {
         lineRenderer = GetComponent<LineRenderer>();
         lineRenderer.useWorldSpace = true;
-        DrawCircle();
         lineRenderer.startWidth = 0.05f;
         lineRenderer.endWidth = 0.05f;
-
     }
 
-    void Start()
+    void Update()
     {
-        endAngle = GlobalVariables.GetThetaRotation ;
-        DrawCircle();
+        if (rotationSlider == null || centerObj == null) return;
+
+        // Get the actual area vector from the surface's rotation
+        Vector3 areaDir = centerObj.transform.up;
+
+        // Measure angle from +X to areaDir using right-handed convention
+        float signedTheta = Vector3.SignedAngle(Vector3.right, areaDir, Vector3.up); // degrees
+
+        if (debugDraw)
+        {
+            Vector3 center = centerObj.transform.position;
+            Vector3 startDir = Vector3.right;
+            Debug.DrawLine(center, center + startDir * radius, Color.blue);   // +X reference
+            Debug.DrawLine(center, center + areaDir * radius, Color.green);   // area vector
+        }
+
+        DrawArcFromSignedAngle(signedTheta);
     }
 
-void Update()
+    public void DrawArcFromSignedAngle(float signedTheta)
     {
-        endAngle = GlobalVariables.GetThetaRotation ; 
-        DrawCircle();
-    }
+        float angleRangeDeg = Mathf.Abs(signedTheta);
+        float startRad = 0f; // anchored to +X axis
+        float sweepRad = angleRangeDeg * Mathf.Deg2Rad;
 
-    void OnValidate()
-    {
-        // Automatically update in Editor when values change
-        if (Application.isPlaying && lineRenderer != null)
-            DrawCircle();
-    }
-
-    public void DrawCircle()
-    {
-        float theta = GlobalVariables.theta * Mathf.Deg2Rad;  // θ in radians
-
-        // Arc starts at +X (field direction)
-        float startRad = 0f;
-        float endRad = theta;
-        float angleRange = endRad - startRad;
-
-        int points = Mathf.Max(2, Mathf.CeilToInt(segments * (angleRange / (2 * Mathf.PI))));
+        int points = Mathf.Max(2, Mathf.CeilToInt(segments * (angleRangeDeg / 360f)));
         lineRenderer.positionCount = points + 1;
 
         Vector3 center = centerObj.transform.position;
@@ -61,16 +57,14 @@ void Update()
         for (int i = 0; i <= points; i++)
         {
             float t = i / (float)points;
-            float angle = startRad + t * angleRange;
+            float angleRad = signedTheta >= 0f
+                ? startRad - t * sweepRad   // counterclockwise for positive angles
+                : startRad + t * sweepRad;  // clockwise for negative angles
 
-            float x = Mathf.Cos(angle) * radius + center.x;
-            float z = Mathf.Sin(angle) * radius + center.z;
+            float x = Mathf.Cos(angleRad) * radius + center.x;
+            float z = Mathf.Sin(angleRad) * radius + center.z;
 
             lineRenderer.SetPosition(i, new Vector3(x, center.y, z));
         }
     }
-
-
-
-
 }
