@@ -4,14 +4,12 @@
 public class CircleRenderer : MonoBehaviour
 {
     [Header("Circle Settings")]
-    public float radius = 0.5f;             // Distance from center to circle edge
-    [Range(3, 512)] public int segments = 100;  // Number of line segments
+    public float radius = 0.5f;
+    [Range(3, 512)] public int segments = 100;
 
-    [Header("Sector Settings")]
-    [Range(0f, 360f)] public float startAngle = 0f;   // In degrees
-    [Range(0f, 360f)] public float endAngle = 180f;   // In degrees
-
-    [SerializeField] public GameObject centerObj;
+    [Header("References")]
+    [SerializeField] private Transform centerObj;          // where the circle is centered
+    [SerializeField] private Transform normalSource;       // object whose forward is the rotating arrow / panel normal
 
     private LineRenderer lineRenderer;
 
@@ -19,58 +17,64 @@ public class CircleRenderer : MonoBehaviour
     {
         lineRenderer = GetComponent<LineRenderer>();
         lineRenderer.useWorldSpace = true;
-        DrawCircle();
         lineRenderer.startWidth = 0.05f;
         lineRenderer.endWidth = 0.05f;
-
     }
 
-    void Start()
+    void Update()
     {
-        endAngle = GlobalVariables.GetThetaRotation ;
         DrawCircle();
-    }
-
-void Update()
-    {
-        endAngle = GlobalVariables.GetThetaRotation ; 
-        DrawCircle();
-    }
-
-    void OnValidate()
-    {
-        // Automatically update in Editor when values change
-        if (Application.isPlaying && lineRenderer != null)
-            DrawCircle();
     }
 
     public void DrawCircle()
     {
-        float theta = GlobalVariables.theta * Mathf.Deg2Rad;  // θ in radians
+        if (centerObj == null || normalSource == null) return;
 
-        // Arc starts at +X (field direction)
-        float startRad = 0f;
-        float endRad = theta;
-        float angleRange = endRad - startRad;
+        Vector3 center = centerObj.position;
 
-        int points = Mathf.Max(2, Mathf.CeilToInt(segments * (angleRange / (2 * Mathf.PI))));
+        // Field direction (dashed red line) in world space
+        Vector3 fieldDir = Vector3.right;
+
+        // Normal direction (rotating arrow / panel normal)
+        Vector3 normalDir = normalSource.forward;
+
+        // Project both onto XZ plane
+        fieldDir.y = 0f;
+        normalDir.y = 0f;
+
+        if (normalDir.sqrMagnitude < 1e-6f) return;
+
+        fieldDir.Normalize();
+        normalDir.Normalize();
+
+        // Angles in XZ
+        float fieldAngle = Mathf.Atan2(fieldDir.z, fieldDir.x);
+        float normalAngle = Mathf.Atan2(normalDir.z, normalDir.x);
+
+        // Direction from field -> normal (sign tells which side)
+        float angleRange = Mathf.DeltaAngle(fieldAngle * Mathf.Rad2Deg, normalAngle * Mathf.Rad2Deg) * Mathf.Deg2Rad;
+
+        // Your existing theta magnitude (do not change flux logic)
+        float theta = Mathf.Abs(GlobalVariables.GetThetaRotation) * Mathf.Deg2Rad;  // or GlobalVariables.theta if that's the one you store
+
+        // Clamp so we don't overshoot the normal direction
+        float sweep = Mathf.Clamp(theta, 0f, Mathf.Abs(angleRange)) * Mathf.Sign(angleRange);
+
+        float startRad = fieldAngle;
+        float endRad = fieldAngle + sweep;
+
+        int points = Mathf.Max(2, segments);
         lineRenderer.positionCount = points + 1;
-
-        Vector3 center = centerObj.transform.position;
 
         for (int i = 0; i <= points; i++)
         {
-            float t = i / (float)points;
-            float angle = startRad + t * angleRange;
+            float t = (float)i / points;
+            float a = Mathf.Lerp(startRad, endRad, t);
 
-            float x = Mathf.Cos(angle) * radius + center.x;
-            float z = Mathf.Sin(angle) * radius + center.z;
+            float x = Mathf.Cos(a) * radius + center.x;
+            float z = Mathf.Sin(a) * radius + center.z;
 
             lineRenderer.SetPosition(i, new Vector3(x, center.y, z));
         }
     }
-
-
-
-
 }
