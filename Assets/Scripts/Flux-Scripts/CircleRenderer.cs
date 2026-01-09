@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(LineRenderer))]
 public class CircleRenderer : MonoBehaviour
@@ -7,9 +8,9 @@ public class CircleRenderer : MonoBehaviour
     public float radius = 0.5f;
     [Range(3, 512)] public int segments = 100;
 
-    [Header("References")]
-    [SerializeField] private Transform centerObj;          // where the circle is centered
-    [SerializeField] private Transform normalSource;       // object whose forward is the rotating arrow / panel normal
+    [SerializeField] private GameObject centerObj;
+    [SerializeField] private Slider rotationSlider;
+    [SerializeField] private bool debugDraw = false;
 
     private LineRenderer lineRenderer;
 
@@ -23,26 +24,33 @@ public class CircleRenderer : MonoBehaviour
 
     void Update()
     {
-        DrawCircle();
+        if (rotationSlider == null || centerObj == null) return;
+
+        // Get the actual area vector from the surface's rotation
+        Vector3 areaDir = centerObj.transform.up;
+
+        // Measure angle from +X to areaDir using right-handed convention
+        float signedTheta = Vector3.SignedAngle(Vector3.right, areaDir, Vector3.up); // degrees
+
+        if (debugDraw)
+        {
+            Vector3 center = centerObj.transform.position;
+            Vector3 startDir = Vector3.right;
+            Debug.DrawLine(center, center + startDir * radius, Color.blue);   // +X reference
+            Debug.DrawLine(center, center + areaDir * radius, Color.green);   // area vector
+        }
+
+        DrawArcFromSignedAngle(signedTheta);
     }
 
-    public void DrawCircle()
+    public void DrawArcFromSignedAngle(float signedTheta)
     {
-        if (centerObj == null || normalSource == null) return;
+        float angleRangeDeg = Mathf.Abs(signedTheta);
+        float startRad = 0f; // anchored to +X axis
+        float sweepRad = angleRangeDeg * Mathf.Deg2Rad;
 
-        Vector3 center = centerObj.position;
-
-        // Field direction (dashed red line) in world space
-        Vector3 fieldDir = Vector3.right;
-
-        // Normal direction (rotating arrow / panel normal)
-        Vector3 normalDir = normalSource.forward;
-
-        // Project both onto XZ plane
-        fieldDir.y = 0f;
-        normalDir.y = 0f;
-
-        if (normalDir.sqrMagnitude < 1e-6f) return;
+        int points = Mathf.Max(2, Mathf.CeilToInt(segments * (angleRangeDeg / 360f)));
+        lineRenderer.positionCount = points + 1;
 
         fieldDir.Normalize();
         normalDir.Normalize();
@@ -68,11 +76,13 @@ public class CircleRenderer : MonoBehaviour
 
         for (int i = 0; i <= points; i++)
         {
-            float t = (float)i / points;
-            float a = Mathf.Lerp(startRad, endRad, t);
+            float t = i / (float)points;
+            float angleRad = signedTheta >= 0f
+                ? startRad - t * sweepRad   // counterclockwise for positive angles
+                : startRad + t * sweepRad;  // clockwise for negative angles
 
-            float x = Mathf.Cos(a) * radius + center.x;
-            float z = Mathf.Sin(a) * radius + center.z;
+            float x = Mathf.Cos(angleRad) * radius + center.x;
+            float z = Mathf.Sin(angleRad) * radius + center.z;
 
             lineRenderer.SetPosition(i, new Vector3(x, center.y, z));
         }

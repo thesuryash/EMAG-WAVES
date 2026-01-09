@@ -41,7 +41,7 @@ public class Flux : MonoBehaviour
     //[SerializeField] private GameObject areaArrowTail;
     //[SerializeField] private GameObject areaArrowHead;
     [SerializeField] private Vector3 arrowheadDirection = new Vector3(0, 1, 0);
-    [SerializeField] private float initialLengthOfTail = 10f;    // Length of the arrow
+    [SerializeField] private float initialLengthOfTail = 15f;    // Length of the arrow
     [SerializeField] private GameObject arrowGameObject;        // The object where the script is attached
 
     private Arrow areaArrow;
@@ -192,10 +192,10 @@ public class Flux : MonoBehaviour
     void Update()
 
     {
-        areaArrow.SetTailLength(CalculateTailLengthByArea(CalculateArea(), 20f));
+        areaArrow.SetTailLength(CalculateTailLengthByArea(CalculateArea(),5f));
         RotateObject();
 
-        fieldArrow.SetTailLength(CalculateLengthByElectricField(electricFieldSlider.value, 20f));
+        fieldArrow.SetTailLength(CalculateLengthByElectricField(electricFieldSlider.value, 10f));
 
 
         //Debug.Log("area: " + area);
@@ -328,8 +328,8 @@ public class Flux : MonoBehaviour
         /*flux = Mathf.Abs(flux) ;*/
         //float thetaTextValue = 180 - Mathf.Abs(180 - theta);
         float thetaTextValue = Mathf.Abs(180 - Mathf.Abs(90 - theta));
-
-        GlobalVariables.theta = thetaTextValue;
+        
+        GlobalVariables.theta = theta;
 
         fluxText.text = "Flux: " + flux.ToString("F2");
 
@@ -345,8 +345,8 @@ public class Flux : MonoBehaviour
         if (area > 0 && maxLength > 0)
         {
             // Define the range of the area that influences the tail length
-            float maxArea = 50f; // Maximum considered area
-            float minArea = 1f;  // Minimum considered area - avoids too small length
+            float maxArea = 4f; // Maximum considered area
+            float minArea = 0.1f;  // Minimum considered area - avoids too small length
 
             // Ensure area is within the bounds
             float clampedArea = Mathf.Clamp(area, minArea, maxArea);
@@ -399,7 +399,7 @@ public class Flux : MonoBehaviour
         if (field >= 0 && maxLength > 0)
         {
             // Define the range of the area that influences the tail length
-            float maxField = 100f; // Maximum considered area
+            float maxField = 10f; // Maximum considered area
             float minField = 0f;  // Minimum considered area - avoids too small length
 
             // Ensure area is within the bounds
