@@ -69,6 +69,11 @@ public class Faraday : MonoBehaviour
     //[SerializeField] private Button pausePlayButton;
     //[SerializeField] private bool isPlaying = false;
 
+    [Header("Visualization Connection")]
+    [SerializeField] private CurrentVisualizer currentVisualizer; // <--- Add [SerializeField]
+
+    private float previousFlux = 0f;
+
     private void Awake()
     {
         frequency = 1f;
@@ -98,61 +103,61 @@ public class Faraday : MonoBehaviour
     void Start()
     {
         float initialLength = Arrow.CalculateLengthByValue(area);
-        //areaArrow = new Arrow(areaArrowAttachedTo, areaArrowHead, areaArrowTail, arrowheadDirection, initialLengthOfTail);
         areaArrow = new Arrow(areaArrowAttachedTo, arrowheadDirection, initialLengthOfTail);
 
-
-        //Setting up the sliders
-        frame = GetComponent<GameObject>();
-
+        // Setting up the sliders
+        frame = GetComponent<GameObject>(); // Note: GetComponent<GameObject> is redundant (gameObject is implicit), but harmless.
 
         float EFMagnitude = MagneticFieldSlider.value;
         float arrowLength = 1f;
 
         fieldArrowParent.AddComponent<MeshFilter>();
-
-        //fieldArrow = new Arrow(fieldArrowParent, fieldArrowHead, fieldArrowTail, new Vector3(0, 0, 1), arrowLength);
         fieldArrow = new Arrow(fieldArrowParent, new Vector3(0, 0, 1), arrowLength);
 
+        // --- LISTENERS SETUP ---
 
-
-        //Listeners
+        // 1. Basic Value Updates (Keep these)
         MagneticFieldSlider.onValueChanged.AddListener(OnElectricFieldSliderChanged);
         lengthSlider.onValueChanged.AddListener(OnLengthSliderChanged);
         widthSlider.onValueChanged.AddListener(OnWidthSliderChanged);
         rotationSlider.onValueChanged.AddListener(OnRotationSliderChanged);
         rotationSlider.onValueChanged.AddListener(SnapToClosestPoint);
-        lengthInput.text = 1f.ToString();
-        widthInput.text = 1f.ToString();
+
+        frequencySlider.onValueChanged.AddListener(OnFrequencySliderChanged);
+
+        // Input Fields
+        lengthInput.text = "1";
+        widthInput.text = "1";
         electricFieldInput.onEndEdit.AddListener(OnElectricFieldChanged);
         lengthInput.onEndEdit.AddListener(OnLengthInputChanged);
         widthInput.onEndEdit.AddListener(OnWidthInputChanged);
         rotationInput.onEndEdit.AddListener(OnRotationInputChanged);
-        frequencySlider.onValueChanged.AddListener(OnFrequencySliderChanged);
         frequencyInput.onEndEdit.AddListener(OnFrequencyInputChanged);
 
-        //pausePlayButton.onClick.AddListener(OnPausePlayClicked);
+        // 2. CRITICAL CHANGE HERE:
+        // Only call CalculateFlux() in the listeners.
+        // Do NOT call CalculateEMF() or CalculateCurrent() here.
+        // The Update() loop will detect the flux change automatically.
 
-        // For mobile input
+        lengthSlider.onValueChanged.AddListener(delegate { CalculateFlux(); });
+        widthSlider.onValueChanged.AddListener(delegate { CalculateFlux(); });
+        rotationSlider.onValueChanged.AddListener(delegate { CalculateFlux(); });
+        MagneticFieldSlider.onValueChanged.AddListener(delegate { CalculateFlux(); });
+
+        // Mobile inputs
         electricFieldInput.onSelect.AddListener(ShowMobileKeyboard);
         lengthInput.onSelect.AddListener(ShowMobileKeyboard);
         widthInput.onSelect.AddListener(ShowMobileKeyboard);
         rotationInput.onSelect.AddListener(ShowMobileKeyboard);
 
-
-        lengthSlider.onValueChanged.AddListener(delegate { CalculateFlux(); CalculateEMF();CalculateCurrent(); });
-        widthSlider.onValueChanged.AddListener(delegate { CalculateFlux(); CalculateEMF(); CalculateCurrent(); });
-        rotationSlider.onValueChanged.AddListener(delegate { CalculateFlux(); CalculateEMF(); CalculateCurrent(); });
-
-
+        // Initial Calculations
         areaText.text = "Area: " + (lengthSlider.value * widthSlider.value).ToString("F2") + " m^2";
 
         CalculateFlux();
-        CalculateEMF(); CalculateCurrent();
-        RotateObject();
+        previousFlux = FaradayLawVariables.Flux; // Initialize previous flux
 
-
-        //Arrow
+        CalculateEMF();
+        CalculateCurrent();
         RotateObject();
 
         areaArrow.SetScene();
@@ -160,7 +165,7 @@ public class Faraday : MonoBehaviour
 
         Debug.Log("Arrow instantiated and scene set.");
 
-
+        frequencyInput.text = System.Math.Round(frequencySlider.value, 3).ToString("F2");
 
     }
 
@@ -238,6 +243,12 @@ public class Faraday : MonoBehaviour
 
 
         //pausePlayButton.onClick.AddListener(OnPausePlayClicked);
+
+        CalculateFlux();
+        CalculateEMF();
+        CalculateCurrent();
+
+       
 
     }
 
@@ -371,29 +382,44 @@ public class Faraday : MonoBehaviour
 
     }
 
-    public float EMFValue(float frequency, float B, float A, float t)
-    {
-        float angle = frequency * t;
-        float E = (float)System.Math.Round(frequency * B * A * Mathf.Sin(angle * Mathf.PI / 180), 3);
+    // Faraday.cs
 
-        Debug.Log("Farady Script Frequency: " + frequency);
+    // CHANGE: Now takes 'currentAngle' instead of time
+    public float EMFValue(float frequency, float B, float A, float currentAngle)
+    {
+        // The "Frequency" here controls the Amplitude (Peak Voltage)
+        // The "Sin" depends on where the cube actually is (currentAngle)
+
+        // Convert degrees to radians for the math
+        float E = (float)System.Math.Round(frequency * B * A * Mathf.Sin(currentAngle * Mathf.Deg2Rad), 3);
         return E;
     }
 
+    // 1. Update CalculateEMF
+    // Faraday.cs
+
     void CalculateEMF()
     {
-        float emf = EMFValue(frequency, MagneticFieldSlider.value, (lengthSlider.value * widthSlider.value), (float)Time.deltaTime);
-        FaradayLawVariables.EMF = emf;
-        // use this wherever suitable
-        emfText.text = $"EMF: "+emf.ToString();
+        // 1. Get current Flux
+        float currentFlux = FaradayLawVariables.Flux;
 
+        // 2. Calculate Induction (Change in Flux / Time)
+        // This naturally becomes 0 if the cube stops rotating
+        float deltaFlux = currentFlux - previousFlux;
+        float emf = -deltaFlux / Time.deltaTime;
+
+        // 3. Store for next frame
+        previousFlux = currentFlux;
+
+        // 4. Update UI
+        FaradayLawVariables.EMF = emf;
+        if (emfText) emfText.text = $"EMF: " + emf.ToString("F3");
     }
 
     public float CurrentValue(float Resistance)
     {
-        float emf = (float)System.Math.Round(EMFValue(frequency, MagneticFieldSlider.value, (lengthSlider.value * widthSlider.value), (float)Time.deltaTime),3);
-
-        return emf / Resistance;
+        // We simply use the EMF we just calculated above
+        return FaradayLawVariables.EMF / Resistance;
     }
 
     void CalculateCurrent()
@@ -402,6 +428,13 @@ public class Faraday : MonoBehaviour
         FaradayLawVariables.Current = current;
         // use this wherever suitable
         currentText.text = $"Current: " + current.ToString();
+
+
+        if (currentVisualizer != null)
+        {
+            // This automatically sets speed and direction (negative = reverse)
+            currentVisualizer.currentAmps = current;
+        }
     }
 
     public float CalculateTailLengthByArea(float area, float maxLength)

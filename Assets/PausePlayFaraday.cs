@@ -6,76 +6,103 @@ using TMPro;
 
 public class PausePlayFaraday : MonoBehaviour
 {
+    [Header("UI References")]
     [SerializeField] private Button pausePlayButton;
     [SerializeField] private TextMeshProUGUI buttonText;
+
+    [Header("Control Settings")]
     [SerializeField] private bool isPlaying = false;
     [SerializeField] private GameObject target;
-    private float rotationSpeed = 50f;
-    private Flux fluxScript;
+    [SerializeField] private float rotationSpeed = 50f;
+
+    // References to the Faraday script and its UI
+    private Faraday faradayScript;
     [SerializeField] private Slider frequencySlider;
     [SerializeField] private TMP_InputField frequencyInput;
-    private float frequency;
+
+    [SerializeField] private Slider rotationSlider;
+    [SerializeField] private TMP_InputField rotationInput;
 
     void Start()
     {
-        pausePlayButton.onClick.AddListener(OnPausePlayClicked);
-        fluxScript = target.GetComponent<Flux>();
+        // 1. Get the Faraday component (replacing 'Flux')
+        faradayScript = target.GetComponent<Faraday>();
 
+        // 2. Setup Button Listener
+        pausePlayButton.onClick.AddListener(OnPausePlayClicked);
+
+        // 3. Setup Frequency Sliders
         frequencySlider.maxValue = 150f;
         frequencySlider.minValue = 0.0f;
+        frequencySlider.value = 50f;
+
+        // Sync initial speed
+        rotationSpeed = frequencySlider.value;
 
         frequencySlider.onValueChanged.AddListener(OnFrequencySliderChanged);
         frequencyInput.onEndEdit.AddListener(OnFrequencyInputChanged);
-
-        frequencySlider.value = 50f;
-
-
     }
 
     private void OnPausePlayClicked()
     {
-        Debug.Log("PausePlay button clicked. isPlaying: " + isPlaying);
+        Debug.Log("PausePlay button clicked. isPlaying: " + !isPlaying); // Log the NEW state
+
         if (!isPlaying)
         {
+            // SWITCH TO PLAYING
             isPlaying = true;
-            fluxScript.rotationSlider.interactable = false; // Disable slider
-            fluxScript.rotationInput.interactable = false; // Disable input field
+
+            // Disable manual slider control while playing
+            rotationSlider.interactable = false;
+           rotationInput.interactable = false;
             Debug.Log("Rotation started.");
         }
         else
         {
+            // SWITCH TO PAUSED
             isPlaying = false;
-            fluxScript.rotationSlider.interactable = true; // Enable slider
-            fluxScript.rotationInput.interactable = true; // Enable input field
+
+            // Re-enable manual slider control
+            rotationSlider.interactable = true;
+            rotationInput.interactable = true;
             Debug.Log("Rotation stopped.");
+
+            // Ensure final rotation is applied
             UpdateRotation();
         }
     }
 
-    private void OnFrequencySliderChanged(float arg0)
+    private void OnFrequencySliderChanged(float val)
     {
-        frequency = arg0;
-        Faraday.frequency = arg0;
-        rotationSpeed = frequency;
-        frequencyInput.text = arg0.ToString();
+        // Update local rotation speed
+        rotationSpeed = val;
+
+        // Update Physics in Faraday script
+        Faraday.frequency = val;
+
+        // Update UI Text
+        if (frequencyInput) frequencyInput.text = val.ToString("F2");
     }
 
-    private void OnFrequencyInputChanged(string arg0)
+    private void OnFrequencyInputChanged(string val)
     {
-        if (float.TryParse(arg0, out float result))
+        if (float.TryParse(val, out float result))
         {
-            frequencySlider.value = result;
-            frequency = float.Parse(arg0);
-
-            Faraday.frequency = float.Parse(arg0);
-            rotationSpeed = frequency;
+            frequencySlider.value = result; // This triggers the slider listener above
         }
     }
 
+    // This logic is now exactly the same as the original PausePlay script
     private void UpdateRotation()
     {
-        float newRotation = (fluxScript.rotationSlider.value + rotationSpeed * Time.deltaTime) % 360;
-        fluxScript.rotationSlider.value = newRotation; // This will trigger the listener in the Flux script
+        // 1. Get current value
+        float currentRotation = rotationSlider.value;
+
+        // 2. Calculate new value (Simple one-line logic)
+        float newRotation = (currentRotation + rotationSpeed * Time.deltaTime) % 360;
+
+        // 3. Apply it back to the slider
+        rotationSlider.value = newRotation;
     }
 
     void Update()
@@ -83,10 +110,6 @@ public class PausePlayFaraday : MonoBehaviour
         if (isPlaying)
         {
             UpdateRotation();
-        }
-
-        if (isPlaying)
-        {
             buttonText.text = "Pause";
         }
         else
@@ -95,6 +118,3 @@ public class PausePlayFaraday : MonoBehaviour
         }
     }
 }
-
-
-

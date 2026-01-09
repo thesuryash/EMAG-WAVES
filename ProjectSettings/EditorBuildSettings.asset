@@ -8,13 +8,13 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/__MainMenu__.unity
     guid: 6daa07de2c567254ba2dc68c9548c907
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/__EMWaves__.unity
     guid: 87ebd6c18d7533e49af2476d87f9b084
   - enabled: 0
     path: Assets/Scenes/__GaussianFlux__.unity
     guid: 4be8fec1f2979a243a58516df017f703
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/__FaradayLaw__.unity
     guid: f586e8b8838ebf649b356d0b0282d1bf
   - enabled: 0

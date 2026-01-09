@@ -52,7 +52,27 @@ public class CircleRenderer : MonoBehaviour
         int points = Mathf.Max(2, Mathf.CeilToInt(segments * (angleRangeDeg / 360f)));
         lineRenderer.positionCount = points + 1;
 
-        Vector3 center = centerObj.transform.position;
+        fieldDir.Normalize();
+        normalDir.Normalize();
+
+        // Angles in XZ
+        float fieldAngle = Mathf.Atan2(fieldDir.z, fieldDir.x);
+        float normalAngle = Mathf.Atan2(normalDir.z, normalDir.x);
+
+        // Direction from field -> normal (sign tells which side)
+        float angleRange = Mathf.DeltaAngle(fieldAngle * Mathf.Rad2Deg, normalAngle * Mathf.Rad2Deg) * Mathf.Deg2Rad;
+
+        // Your existing theta magnitude (do not change flux logic)
+        float theta = Mathf.Abs(GlobalVariables.GetThetaRotation) * Mathf.Deg2Rad;  // or GlobalVariables.theta if that's the one you store
+
+        // Clamp so we don't overshoot the normal direction
+        float sweep = Mathf.Clamp(theta, 0f, Mathf.Abs(angleRange)) * Mathf.Sign(angleRange);
+
+        float startRad = fieldAngle;
+        float endRad = fieldAngle + sweep;
+
+        int points = Mathf.Max(2, segments);
+        lineRenderer.positionCount = points + 1;
 
         for (int i = 0; i <= points; i++)
         {

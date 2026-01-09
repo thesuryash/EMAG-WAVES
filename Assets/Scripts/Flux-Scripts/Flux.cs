@@ -81,7 +81,7 @@ public class Flux : MonoBehaviour
     void Start()
     {
 
-        if(areaArrowAttachedTo == null)
+        if (areaArrowAttachedTo == null)
         {
             areaArrowAttachedTo = fieldArrowParent;
         }
@@ -418,4 +418,3 @@ public class Flux : MonoBehaviour
     }
 
 }
-
