@@ -10,13 +10,13 @@ using UnityEngine.UI; // Required for UI elements
 public class EMWaveManager : MonoBehaviour
 {
     [Header("Wave Properties")]
-    [SerializeField] public float amplitude = 4.0f;      // Maximum field strength
-    [SerializeField] public float wavelength = 10.0f;     // Distance between wave peaks
-    [SerializeField] public float frequency = 0.5f;      // Wave oscillation speed
+    [SerializeField] public float amplitude = 3f;      // Maximum field strength
+    [SerializeField] public float wavelength = 10f;     // Distance between wave peaks
+    [SerializeField] public float frequency;      // Wave oscillation speed
     [SerializeField] public int pointCountPerWave = 200;         // Number of field vectors to display
     [SerializeField] public int wavesPerAxis = 2;         // KEEEP THIS LOW OR I AM NOT SURE WHAT WILLL HAPPEN!!
     [SerializeField] public float waveLength = 100.0f;
-    [SerializeField] public int waveRows = 1; //this controls how many waves in parallel hooorizontally?
+    [SerializeField] public int waveRows = 1; //this controls how many waves in parallel ?
 
     public float waveSpeed;
     public int spaceBetweenWaves = 10;
