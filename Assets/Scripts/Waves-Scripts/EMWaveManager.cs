@@ -319,7 +319,7 @@ public class EMWaveManager : MonoBehaviour
                 nextCullingUpdate = Time.time + cullingUpdateInterval;
             }
         }
-        catch (System.Exception e)
+        catch (System.Exception e)  
         {
             Debug.LogError("Error in EMWaveManager Update(): " + e.Message);
         }

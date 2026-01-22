@@ -52,6 +52,7 @@ public class CircleRenderer : MonoBehaviour
         int points = Mathf.Max(2, Mathf.CeilToInt(segments * (angleRangeDeg / 360f)));
         lineRenderer.positionCount = points + 1;
 
+<<<<<<< HEAD
         fieldDir.Normalize();
         normalDir.Normalize();
 
@@ -73,6 +74,9 @@ public class CircleRenderer : MonoBehaviour
 
         int points = Mathf.Max(2, segments);
         lineRenderer.positionCount = points + 1;
+=======
+        Vector3 center = centerObj.transform.position;
+>>>>>>> c5de63b56bf9714503326fda9cc4eb4efcb49210
 
         for (int i = 0; i <= points; i++)
         {
@@ -87,4 +91,8 @@ public class CircleRenderer : MonoBehaviour
             lineRenderer.SetPosition(i, new Vector3(x, center.y, z));
         }
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> c5de63b56bf9714503326fda9cc4eb4efcb49210
