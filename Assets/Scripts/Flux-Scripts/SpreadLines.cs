@@ -4,152 +4,133 @@ using UnityEngine.UI;
 
 public class SpreadLines : MonoBehaviour
 {
-    [SerializeField] private LineRenderer baseLine;
-    [SerializeField] private GameObject baseArrow;
-    [SerializeField] private Transform parent;
-    [SerializeField] private GameObject rendererParent;
-    [SerializeField] private Slider ElectricField;
-    [SerializeField] private GameObject ElectricFieldArrow;
-    [SerializeField] private GameObject StaticArrowParent;
-/*  [SerializeField] private Slider Length;
-    [SerializeField] private Slider Width;*/
-    private Vector3 pos;
-    private Queue<LineRenderer> linePool = new Queue<LineRenderer>();
-    private List<LineRenderer> activeLineRenderers = new List<LineRenderer>();
-    private float maxLines;
+    [Header("References")]
+    [SerializeField] private LineRenderer linePrefab;
+    [SerializeField] private Transform poolContainer;      // Parent for pooled line objects
+    [SerializeField] private GameObject visualRoot;        // Root to enable/disable visuals (optional)
+
+    [Header("UI")]
+    [SerializeField] private Slider electricFieldSlider;
+
+    [Header("Toggles")]
+    [SerializeField] private List<GameObject> toggleWithField = new(); // arrows, parents, etc.
+    [SerializeField] private bool alsoTogglePrefabLineRenderer = true; // if you want linePrefab.enabled toggled too
+
+    [Header("Grid Settings")]
+    [SerializeField] private float halfExtent = 10f;       // was hardcoded 10f
+    [SerializeField] private float stepNumerator = 5f;     // was 5 / sqrt(E)
+    [SerializeField] private Vector2 stepClamp = new Vector2(1f, 51f);
+
+    [Header("Pooling")]
+    [SerializeField] private int initialPoolSize = 200;    // sensible default, not magic
+
+    private readonly Queue<LineRenderer> pool = new();
+    private readonly List<LineRenderer> active = new();
 
     private void Awake()
     {
-        pos = baseLine.transform.position;
-        maxLines = 1000 / Mathf.Sqrt(5000); // Adjusted for an initial size of the pool
-        InitializeLinePool();
+        ValidateRefs();
+        InitializePool(initialPoolSize);
 
-        // Add listeners to sliders
-        ElectricField.onValueChanged.AddListener(delegate { OnSliderChange(); });
-
+        electricFieldSlider.onValueChanged.AddListener(OnElectricFieldChanged);
+        OnElectricFieldChanged(electricFieldSlider.value); // apply initial state
     }
 
-    private void InitializeLinePool()
+    private void ValidateRefs()
     {
-        for (int i = 0; i < maxLines; i++)
+        if (!linePrefab) Debug.LogError($"{nameof(SpreadLines)}: Missing linePrefab.", this);
+        if (!poolContainer) Debug.LogError($"{nameof(SpreadLines)}: Missing poolContainer.", this);
+        if (!electricFieldSlider) Debug.LogError($"{nameof(SpreadLines)}: Missing electricFieldSlider.", this);
+    }
+
+    private void InitializePool(int count)
+    {
+        for (int i = 0; i < count; i++)
         {
-            LineRenderer lr = Instantiate(baseLine, parent);
-            lr.gameObject.SetActive(false); // Initially deactivate
-            linePool.Enqueue(lr); // Add to the queue
+            var lr = Instantiate(linePrefab, poolContainer);
+            lr.gameObject.SetActive(false);
+            pool.Enqueue(lr);
         }
     }
 
-    private LineRenderer GetLineRendererFromPool()
+    private void OnElectricFieldChanged(float value)
     {
-        if (linePool.Count > 0)
-        {
-            LineRenderer lr = linePool.Dequeue();
-            lr.gameObject.SetActive(true);
-            activeLineRenderers.Add(lr);
-            return lr;
-        }
-        else
-        {
-            LineRenderer lr = Instantiate(baseLine, parent);
-            lr.gameObject.SetActive(true);
-            activeLineRenderers.Add(lr);
-            return lr;
-        }
-    }
+        bool enabled = value > 0f;
 
-    private void ReturnLineRendererToPool(LineRenderer lr)
-    {
-        lr.gameObject.SetActive(false);
-        linePool.Enqueue(lr);
-        activeLineRenderers.Remove(lr);
-    }
+        if (visualRoot) visualRoot.SetActive(enabled);
+        for (int i = 0; i < toggleWithField.Count; i++)
+        {
+            if (toggleWithField[i]) toggleWithField[i].SetActive(enabled);
+        }
 
-    private void OnSliderChange()
-    {
-        float step = StepSizeByEField();
+        if (alsoTogglePrefabLineRenderer && linePrefab)
+            linePrefab.enabled = enabled;
+
+        if (!enabled)
+        {
+            ResetAndPoolAllLines();
+            return;
+        }
+
+        float step = StepSizeByEField(value);
         SpreadFieldLines(step);
-
-        if(ElectricField.value == 0)
-        {
-            rendererParent.SetActive(false);
-            ElectricFieldArrow.SetActive(false);
-            baseArrow.SetActive(false);
-            //StaticArrowParent.SetActive(false);
-            baseLine.enabled = false;
-        }
-        else
-        {
-            rendererParent.SetActive(true);
-            ElectricFieldArrow.SetActive(true);
-            baseArrow.SetActive(true);
-            //StaticArrowParent.SetActive(true);
-            baseLine.enabled = true;
-        }
     }
 
-    private float StepSizeByEField()
+    private float StepSizeByEField(float eField)
     {
-        if (ElectricField.value == 0)
-        {
-            baseLine.enabled = false;
-            return float.MaxValue; // No lines when there's no electric field.
-        }
-        baseLine.enabled = true;
-
-        // Use an inverse function to decrease step size as ElectricField.value increases
-        //float stepSize = 25 / Mathf.Sqrt(ElectricField.value);
-        float stepSize = 5 / Mathf.Sqrt(ElectricField.value);
-
-
-        // Clamp the step size to maintain a practical range
-        stepSize = Mathf.Clamp(stepSize, 1.0f, 51.0f); // Ensure step size stays between 2 and 20
-
-        return stepSize;
+        // step = stepNumerator / sqrt(E)
+        float step = stepNumerator / Mathf.Sqrt(eField);
+        return Mathf.Clamp(step, stepClamp.x, stepClamp.y);
     }
-
-
-
-
 
     private void SpreadFieldLines(float stepSize)
     {
         ResetAndPoolAllLines();
 
-        Vector3 startPosX = new Vector3(pos.x - stepSize * Mathf.Floor(10f/stepSize), pos.y, pos.z);
-        Vector3 endPosX = new Vector3(pos.x + stepSize * Mathf.Floor(10f / stepSize), pos.y, pos.z);
-        Vector3 stepX = new Vector3(stepSize, 0, 0);
+        Vector3 origin = linePrefab.transform.position; // don’t cache if it could move
 
-        for (Vector3 i = startPosX; i.x <= endPosX.x; i += stepX)
+        float snapped = stepSize * Mathf.Floor(halfExtent / stepSize);
+        float minX = origin.x - snapped;
+        float maxX = origin.x + snapped;
+        float minY = origin.y - snapped;
+        float maxY = origin.y + snapped;
+
+        for (float x = minX; x <= maxX; x += stepSize)
         {
-            Vector3 startPosY = new Vector3(i.x, pos.y - stepSize * Mathf.Floor(10f / stepSize), pos.z);
-            Vector3 endPosY = new Vector3(i.x, pos.y + stepSize * Mathf.Floor(10f / stepSize), pos.z);
-            Vector3 stepY = new Vector3(0, stepSize, 0);
-
-            for (Vector3 j = startPosY; j.y <= endPosY.y; j += stepY)
+            for (float y = minY; y <= maxY; y += stepSize)
             {
-                LineRenderer lr = GetLineRendererFromPool();
-                lr.transform.position = new Vector3(i.x, j.y, pos.z);
-                /*lr.startColor = new Color(0.537f, 0.812f, 0.941f, 1);
-                lr.endColor = new Color(0.537f, 0.812f, 0.941f, 1);*/
+                LineRenderer lr = GetFromPool();
+                lr.transform.position = new Vector3(x, y, origin.z);
             }
         }
     }
 
+    private LineRenderer GetFromPool()
+    {
+        LineRenderer lr = pool.Count > 0 ? pool.Dequeue() : Instantiate(linePrefab, poolContainer);
+        lr.gameObject.SetActive(true);
+        active.Add(lr);
+        return lr;
+    }
+
+    private void ReturnToPool(LineRenderer lr)
+    {
+        lr.gameObject.SetActive(false);
+        pool.Enqueue(lr);
+    }
+
     private void ResetAndPoolAllLines()
     {
-        foreach (LineRenderer lr in new List<LineRenderer>(activeLineRenderers))
+        for (int i = active.Count - 1; i >= 0; i--)
         {
-            ReturnLineRendererToPool(lr);
+            ReturnToPool(active[i]);
         }
+        active.Clear();
     }
 
     private void OnDestroy()
     {
-        // Remove listeners when the object is destroyed
-        ElectricField.onValueChanged.RemoveAllListeners();
-
+        if (electricFieldSlider)
+            electricFieldSlider.onValueChanged.RemoveListener(OnElectricFieldChanged);
     }
 }
-
-
-
